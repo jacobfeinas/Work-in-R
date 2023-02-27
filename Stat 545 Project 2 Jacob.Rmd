@@ -1,0 +1,115 @@
+---
+title: "STAT 545 Project 2"
+author: "Jacob Feinas, Aaron Barton, Allyson Goeden"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load in Libraries
+
+```{r, message=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(GGally)
+library(car)
+library(lessR)
+library(lubridate)
+```
+
+## Read in Data
+
+```{r, echo=FALSE}
+realEstData = read.csv("lakeGeneva.csv")
+```
+
+## Initial Analysis
+
+```{r, echo=FALSE}
+#keep desired categories in new data frame
+realEstData2 = realEstData %>% dplyr::select(daterecorded, countydocnum,  physicalpropaddress, totvalrealestatetransfrd, lotsquarefootage, totalacres, propertytype, predominantuse, feetwaterfrontage, numberofunits, watertype, conveyancedate)
+
+#eliminates properties that sold for less than $100
+realEstData2 = realEstData2[realEstData$totvalrealestatetransfrd > 100, ]
+
+#transforms lotsquarefootage into acres and combines with totalacres
+realEstData2 = realEstData2 %>% mutate(newAcres = (lotsquarefootage / 43560) + totalacres)
+realEstData2 = realEstData2[realEstData2$newAcres > 0.01, ]
+
+#eliminates duplicates
+realEstData2 = realEstData2 %>% distinct(countydocnum, .keep_all = TRUE)
+
+#turn predominant use categories into factors
+predominantuse = as.factor(c("Single Family", "Multi-Family", "Commercial", "Agricultural", "Time Share Unit", "Utility", "Miscellaneous"))
+
+#log of both response and explanatory
+realEstMod = lm(log(totvalrealestatetransfrd)~log(newAcres), realEstData2)
+
+#worry about heteroscedasticity?
+
+plot(realEstMod)
+summary(realEstMod)
+realEstPlot = ggplot(aes(x=log(newAcres), y=log(totvalrealestatetransfrd)), data=realEstData2)+geom_point()+geom_smooth(method = "lm")
+realEstPlot
+```
+
+## Additional Models and Plots
+
+```{r, echo=FALSE}
+#predominant use model
+realEstMod2 = lm(log(totvalrealestatetransfrd)~log(newAcres) + predominantuse, realEstData2)
+summary(realEstMod2)
+
+#linear plot
+ggplot(aes(x=log(newAcres), y=log(totvalrealestatetransfrd)), data=realEstData2) + geom_point() + geom_smooth(method = "lm") + ylab("Log of Total Value of Real Estate Transferred") + xlab("Log of Acres")
+
+#violin plot
+ggplot(aes(x=predominantuse, y=log(totvalrealestatetransfrd), fill=predominantuse), data=realEstData2) + geom_violin() + ylab("Log of Total Value of Real Estate Transferred") + xlab("Predominant Use")
+```
+
+## Time Analysis
+
+```{r, echo=FALSE}
+# Code used to make month and year variables 
+realEstData2 = realEstData2 %>% mutate(month = factor(month(mdy_hms(conveyancedate))),
+          year = (year(mdy_hms(conveyancedate))))
+
+#group by year and month, with summary of the median for each year/month combo
+realEstDataNew = realEstData2 %>% dplyr::group_by(year, month) %>% dplyr::summarize(count = n(), Median = median(totvalrealestatetransfrd), Q3 = quantile(totvalrealestatetransfrd, probs = 0.75))
+
+#model with month (factor) and year (numeric), weighted by count
+timeMod = lm(Median~month+year, data = realEstDataNew, weights = count)
+summary(timeMod)
+
+#test significance for all months and years at once
+anova(timeMod)
+
+#seperate months into yearly quarters
+realEstDataQ = realEstDataNew[realEstDataNew$year > 2016,] %>% mutate(Quarter = case_when(
+  month %in% c(1,2,3) ~ "Q1",
+  month %in% c(4,5,6) ~ "Q2",
+  month %in% c(7,8,9) ~ "Q3",
+  month %in% c(10,11,12) ~ "Q4",
+  TRUE ~ "NA"
+))
+
+#creates plot with year vs median seperated by month/quarter, jittered
+ggplot(aes(x=year, y=Median, shape=Quarter), data=realEstDataQ)+geom_jitter(width = 0.1)+ geom_line(aes(x=year, y=Median, color = month))
+
+#model with only year, weighted by count
+yearMod = lm(Median~year, data = realEstDataNew, weights = count)
+summary(yearMod)
+plot(yearMod)
+```
+
+## Limitations of the Model and Data, Possible Improvements, and Remaining Questions
+
+- There is a lot of clumped up values near zero acres that fetch vastly different prices. There is a clearer trend that appears as the total acres increases, but it is still not
+- There is no data on condition of the property or location in terms of neighborhood/area conditions
+- There is no information on how the data is recorded, and if it was self-reported, how does that effect the accuracy?
+- There are a lot of values for acres that are 0 that were excluded from the condensed data frame, so how would the inclusion of all of the excluded data points affect the model?
+- Some of the values for the total value are 0 or very small
+- Why were there so many duplicates?

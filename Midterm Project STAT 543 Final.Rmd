@@ -1,0 +1,290 @@
+---
+title: "Midterm Project Part 1"
+author: "Jacob Feinas"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#Load in necessary libraries
+library(MASS)
+library(ggplot2)
+library(tidyverse)
+library(gridExtra)
+library(glmnet)
+library(ResourceSelection)
+library(boot)
+library(pROC)
+```
+
+## Introduction
+
+Early detection of malignant tumors is paramount to receiving proper and effective care during cancer treatment, and the goal of this project is to predict whether cancer samples are benign or malignant using data analysis in R. To accomplish this early detection, we will create a model based on analysis of measurements done on cancerous breast tissue on a sample size of 469 with 10 variables split into 3 categories: mean, standard error, and “worst” (mean of the three largest values). ID number was excluded for irrelevance since the ID number of case is strictly for the sake of bookkeeping. The remaining categories will then be compared to the diagnosis of the cancer samples, which has a malignant diagnosis rate of 36.25%. Then, the variables selected will be used to create an effective model to predict tumor diagnosis.
+
+## Exploring and Transforming the Data
+
+When digging into the data, I started by looking at each variable separately and assessing if any measurement stood out as being more significant than the rest. I created a boxplot of each variable by cancer diagnosis and did a visual inspection of the plots to see if there was a significant difference between benign and malignant diagnoses. The variables that fit these criteria were all the radius, perimeter, and area measurements, as well as the mean and “worst” for concave points. After digging deeper into the data and looking at a few transformations, I decided to exclude the concave points. When transforming these variables, it created worrying heteroscedasticity compared to the rest of the variables. I then created violin plots for the remaining variables to show the density of the data, as shown below.
+
+Once the variables were condensed down, I then started looking at possible transformations. The first I attempted was a logarithmic transformation. This seemed like the most sensible due to the presence of quite a few extreme outliers. This reined in the extreme outliers closer to the rest of the data. Power transformations larger than one did not make sense due to the possibility of amplifying the variance but using the square root transformation was worth exploring. I found that it did little to help rein in the outliers, but made the data near the mean more dense.
+
+Through careful consideration, a logarithmic transformation is the most effective option. There are quite a few outliers within the data, especially with the malignant diagnosis. The logarithmic transformation reined in most of these extreme outliers.
+
+After the transformations, correlation between the variables was assessed. The measurements from each specific group (radius, perimeter, area) were graphed against each other to check for correlation (both un-transformed and logarithmic). Each graph produced some sort of trend, with mean vs. worst seeming to be the most correlated. The graphs below show the relationships between radius mean, radius standard error, and radius worst (un-transformed and logarithmic), and the graphs for the relationships between the perimeter categories and area categories follow the same trends. With this knowledge, we can condense down further by eliminating highly correlated variables to help reduce multicollinearity when we start constructing our model. 
+
+```{r, echo = FALSE, results = "hide"}
+# read in data
+cancerData = read.csv("breastcancer.csv")
+blindData = read.csv("breastcancer-test-blinded.csv")
+```
+
+```{r, echo = FALSE, results = "hide"}
+rm = ggplot(aes(x=log(radius_mean), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+rs = ggplot(aes(x=log(radius_se), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+rw = ggplot(aes(x=log(radius_worst), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+
+pm = ggplot(aes(x=log(perimeter_mean), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+ps = ggplot(aes(x=log(perimeter_se), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+pw = ggplot(aes(x=log(perimeter_worst), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+
+am = ggplot(aes(x=log(area_mean), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+as = ggplot(aes(x=log(area_se), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+aw = ggplot(aes(x=log(area_worst), y=diagnosis), data=cancerData) + geom_violin() + coord_flip()
+```
+
+```{r, echo = FALSE, results = "hide"}
+r1 = ggplot(aes(x=radius_mean, y=radius_se), data=cancerData) + geom_point()
+r2 = ggplot(aes(x=radius_mean, y=radius_worst), data=cancerData) + geom_point()
+r3 = ggplot(aes(x=radius_worst, y=radius_se), data=cancerData) + geom_point()
+
+r4 = ggplot(aes(x=log(radius_mean), y=log(radius_se)), data=cancerData) + geom_point()
+r5 = ggplot(aes(x=log(radius_mean), y=log(radius_worst)), data=cancerData) + geom_point()
+r6 = ggplot(aes(x=log(radius_worst), y=log(radius_se)), data=cancerData) + geom_point()
+```
+
+```{r fig.height = 4, fig.width = 7, echo = FALSE, results="hide", warning=FALSE}
+grid.arrange(rm,rs,rw,pm,ps,pw,am,as,aw, nrow=3)
+grid.arrange(r1,r2,r3,r4,r5,r6, nrow=3)
+```
+
+```{r, echo = FALSE, results = "hide"}
+# change diagnosis to 0/1 (B/M)
+cancerData$diagnosis = ifelse(cancerData$diagnosis=="M",1,0)
+```
+
+
+```{r, echo = FALSE, results = "hide", warning=FALSE}
+# create new data frame based on desired variables
+cancerData = cancerData %>% dplyr::select(diagnosis, radius_mean, radius_se, radius_worst, perimeter_mean, perimeter_se, perimeter_worst, area_mean, area_se, area_worst)
+
+# set seed for replicability
+set.seed(908)
+
+# create train and test data
+trainCancer <- sample(1:nrow(cancerData), floor(.75*nrow(cancerData)), replace=F)
+cancerTrain <- cancerData[trainCancer,]
+cancerTest <- cancerData[-trainCancer,]
+
+# full model
+cancerMod = glm(diagnosis~., family = binomial, data = cancerTrain)
+summary(cancerMod)
+
+# null model
+cancerNull = glm(diagnosis~1, family = binomial, data = cancerTrain)
+
+# test to see if full model is better than null model
+anova(cancerNull, cancerMod, test = "Chisq")
+```
+
+```{r, echo = FALSE, results = "hide"}
+cancerModNamesFull = c("Intercept", "Radius Mean", "Radius SE", "Radius Worst", "Perimeter Mean", "Perimeter SE", "Perimeter Worst", "Area Mean", "Area SE", "Area Worst")
+
+coefListFull = as.vector(rep(1, 10))
+
+for(i in 1:10){
+  coefListFull[i] = cancerMod$coef[i]
+  }
+
+cancerModTableFull = rbind(cancerModNamesFull, coefListFull)
+cancerModTableFull
+```
+
+```{r, echo = FALSE, results="hide", warning=FALSE, message = FALSE}
+# lasso regression and set seed
+set.seed(908)
+xx = model.matrix(diagnosis~., cancerTrain)
+yy = cancerTrain$diagnosis
+
+cancerModLasso = cv.glmnet(xx, yy, family="binomial", alpha=1, type.measure="default")
+coef(cancerModLasso, s=cancerModLasso$lambda.min)
+
+# created lasso model
+cancerModLasso = glm(diagnosis ~ radius_mean + radius_se + perimeter_mean + perimeter_se + perimeter_worst + area_worst, family = binomial, data = cancerTrain)
+
+# anova(cancerModLasso, cancerMod, test="Chisq")
+
+# commented out this portion of code due to checking covariance, but neither model was used
+
+# cancerModLasso2 = glm(diagnosis ~ radius_mean + radius_se + perimeter_mean + perimeter_se + area_worst, family = binomial, data = cancerTrain)
+# 
+# cancerModLasso3 = glm(diagnosis ~ radius_mean + radius_se + perimeter_se + perimeter_worst + area_worst, family = binomial, data = cancerTrain)
+
+# anova(cancerModLasso2, cancerModLasso, test="Chisq")
+# anova(cancerModLasso3, cancerModLasso, test="Chisq")
+
+# create ROC curve and threshold for cancer diagnosis probability
+mean(cancerData$diagnosis) # what is the rate from raw data
+
+rocCurve = roc(cancerTrain$diagnosis, cancerModLasso$fitted)
+rocCurve # concordance index
+
+#create optimal threshold based on balance of sens/spec
+metrics <- rocCurve$sensitivities + rocCurve$specificities
+max.metric.ind <- which(metrics == max(metrics))
+opt.threshold <- rocCurve$thresholds[max.metric.ind]
+
+# create classification table for train data
+predsTrain = predict.glm(cancerModLasso, type="response")
+predsTrainResp = predsTrain > opt.threshold
+predsTrainTable = table(predsTrainResp, cancerTrain$diagnosis)
+predsTrainTable
+
+# create new data frame for test data for classification table
+newData = cancerTest[,-1]
+
+# create classification table for test data
+predsTest = predict.glm(cancerModLasso, newdata=newData, type="response")
+predsTestResp = predsTest > opt.threshold
+predsTestTable = table(predsTestResp, cancerTest$diagnosis)
+predsTestTable
+
+# misclassification rate
+(predsTestTable[1,2]+predsTestTable[2,1]) / sum(predsTestTable[,])
+```
+
+```{r, echo = FALSE, results = "hide"}
+cancerModNames = c("Intercept", "Radius Mean", "Radius SE", "Perimeter Mean", "Perimeter SE", "Perimeter Worst", "Area Worst")
+
+coefList = as.vector(rep(1, 7))
+
+for(i in 1:7){
+  coefList[i] = cancerModLasso$coef[i]
+  }
+
+cancerModTable = rbind(cancerModNames, coefList)
+cancerModTable
+```
+
+```{r, echo = FALSE, results="hide"}
+# create classification table for train data
+predsTrainF = predict.glm(cancerMod, type="response")
+predsTrainRespF = predsTrainF > 0.5
+predsTrainTableF = table(predsTrainRespF, cancerTrain$diagnosis)
+predsTrainTableF
+
+# create new data frame for test data for classification table
+newData = cancerTest[,-1]
+
+# create classification table for test data
+predsTestF = predict.glm(cancerMod, newdata=newData, type="response")
+predsTestRespF = predsTestF > 0.5
+predsTestTableF = table(predsTestRespF, cancerTest$diagnosis)
+predsTestTableF
+```
+
+```{r, echo = FALSE, results="hide"}
+# misclassification rate for saturated
+(predsTestTableF[1,2]+predsTestTableF[2,1]) / sum(predsTestTableF[,])
+
+# misclassification rate for lasso
+(predsTestTable[1,2]+predsTestTable[2,1]) / sum(predsTestTable[,])
+
+# sensitivity for saturated (true positive rate)
+predsTrainTableF[2,2]/sum(predsTrainTableF[2,])
+predsTestTableF[2,2]/sum(predsTestTableF[2,])
+
+#specificity for saturated (true negative rate)
+predsTrainTableF[1,1]/sum(predsTrainTableF[1,])
+predsTestTableF[1,1]/sum(predsTestTableF[1,])
+
+# sensitivity for lasso
+predsTrainTable[2,2]/sum(predsTrainTable[2,])
+predsTestTable[2,2]/sum(predsTestTable[2,])
+
+#specificity for lasso
+predsTrainTable[1,1]/sum(predsTrainTable[1,])
+predsTestTable[1,1]/sum(predsTestTable[1,])
+```
+
+## Model Development and Selection
+
+Regarding the development of the model, the response variable, diagnosis, was considered against all possible remaining explanatory variables selected through the initial exploration of the data. 
+
+The data was split into two categories, training and testing data. This split was done with 75% of the data going to the training set, with the remaining going to the test set. All data analysis was done on the training set, then checked for validity with the test set. The initial test done was an ANOVA test to compare a fully saturated model against the null model to assess if the naive model with the intercept as it is only term has equivalent or better predictive power than the saturated model. With a p < 0.001, the ANOVA test shows us that a more saturated model is needed. When creating this model, the result will take the form: 
+
+$ln(p/(1-p)) = \beta_0 + \beta_1x_1 + ... + \beta_kx_k$
+
+Where $k$ is the number of variables used within the model.
+
+The variables in the saturated model are radius mean, radius standard error, radius worst, perimeter mean, perimeter standard error, perimeter worst, area mean, area standard error, and area worst.
+
+Using the saturated model to predict cancer diagnoses with a diagnosis threshold of 0.5 results in the following contingency tables for our training and testing data: 
+
+```{r, echo = FALSE}
+predsTrainTableF
+predsTestTableF
+```
+
+This is a highly effective model for determining cancer status, with only 16 misclassifications in the training data and 5 misclassifications in the test data. However, there may be a way to condense the model to eliminate some issues that arise when using a fully saturated model with multicollinear variables. 
+
+A condensing of the saturated model was done using the lasso regression method to remove any extraneous variables. This will have the same general format as the saturated model, where $x_1, x_2, ..., x_6$ are radius mean, radius standard error, perimeter mean, perimeter standard error, perimeter worst, and area worst respectively.
+
+The threshold used for classification of benign or malignant using the lasso regression model was optimized through a ROC curve, weighing the sensitivity against specificity. When quantifying the ROC curve, we have a concordance index of 0.987, which means that our model is immensely powerful in terms of predictive power and shows a strong concordance between our predictions and the observed outcomes. We can then figure out which value maximizes both our sensitivity and specificity and set that as our optimal threshold.
+
+```{r, echo = FALSE}
+plot(rocCurve)
+rocCurve$auc
+```
+
+The contingency tables we derive from our lasso model with our newly found optimal threshold is:
+
+```{r, echo = FALSE}
+predsTrainTable
+predsTestTable
+```
+
+From here, a comparison of the lasso regression model against the saturated model was done using an ANOVA test in addition to comparing sensitivity, specificity, and misclassification rate (Misclass. Rate). 
+
+```{r, echo = FALSE}
+cancMatData = c("", "Sensitivity", "Specificity", "Misclass. Rate", "Lasso Train", 0.916, 0.977, NA, "Lasso Test", 0.953, 0.947, "5.1%", "Saturated Train", 0.936, 0.965, NA, "Saturated Test", 0.976, 0.947, "4.2%")
+
+cancerModMatrix = matrix(cancMatData, nrow=5, ncol=4, byrow=TRUE)
+cancerModMatrix
+
+anova(cancerModLasso, cancerMod, test="Chisq")
+```
+
+These two metrics produce some conflicting information. Glancing at the p-value from the ANOVA test would lead in the direction of using the simpler, lasso regression model. However, when assessing the table comparing sensitivity, specificity, and misclassification rate, the saturated model is the clear winner. Considering this information, which is the better model to use?
+
+## Results Summary
+
+I opted to use the lasso regression model, and I did for three reasons. The first is the accounting for multicollinearity. While not perfect, the lasso regression method does an adequate job of removing variables that have high correlation with others. Having multiple variables that are highly correlated can lead to problems, such as difficult interpretation and overfitting of the model. Second, since the ANOVA test resulted in a non-significant p-value, this tells us that a simpler model is acceptable. Since the change in deviance between the two models is not significantly different, the simpler model is preferred for the same reasons that multicollinearity is a problem for the saturated model. Lastly, when assessing the values for sensitivity, specificity, and misclassification rate, all the values resulting from both models are close to each other. I believe that the simplification of the saturated model is worth the trade-off for an increase of 0.9% in the misclassification rate for the lasso model.
+
+With a final misclassification rate of 5.1% for our lasso model, we have created a useful model for diagnosing tumors when compared to the naive misclassification rate of 36.25%, which we would have if we estimated that every single person did not have a malignant tumor. 
+
+```{r, echo = FALSE, message = FALSE}
+#Blinded Accuracy Test
+predsBlind= predict.glm(cancerModLasso, newdata = blindData, type="response")
+predsBlindResp = predsBlind > opt.threshold
+
+blindData = blindData %>% dplyr::mutate(diagnosis = predsBlindResp)
+
+blindData2 = blindData$diagnosis = ifelse(blindData$diagnosis==1,"M","B")
+
+blindData3 = data.frame(blindData2)
+
+write_csv(blindData3, "blindData.csv")
+```
+

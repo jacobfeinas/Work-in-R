@@ -1,0 +1,280 @@
+---
+title: "Project 3 Master File"
+author: "Jacob Feinas, Aaron Barton, Allyson Goeden"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Read in libraries
+
+```{r message = FALSE, warning = FALSE, echo = FALSE}
+source("/Users/jacobfeinas/Desktop/rstudioFiles/libraries.R")
+```
+
+## Read in and clean data
+
+```{r, message = FALSE, warning = FALSE, results = "hide", echo = FALSE}
+camryData <- read_excel("Project 3 Cars.xlsx", sheet = 1)
+ravData <- read_excel("Project 3 Cars.xlsx", sheet = 2)
+tacomaData <- read_excel("Project 3 Cars.xlsx", sheet = 3)
+
+camryLong <- camryData %>% pivot_longer(cols = Jan:Dec, names_to="Month", values_to="Sales")
+ravLong <- ravData %>% pivot_longer(cols = Jan:Dec, names_to="Month", values_to="Sales")
+tacomaLong <- tacomaData %>% pivot_longer(cols = Jan:Dec, names_to="Month", values_to="Sales")
+
+camryLong <- camryLong %>% dplyr::slice(-215,-216)
+
+ravLong$Sales[ravLong$Sales == 0] = NA
+ravLong <- ravLong %>% dplyr::slice(-215,-216)
+
+tacomaLong$Sales[tacomaLong$Sales == 0] = NA
+tacomaLong <- tacomaLong %>% dplyr::slice(-215,-216)
+
+camryData2 <- camryLong
+ravData2 <- na_kalman(ravLong)
+tacomaData2 <- na_kalman(tacomaLong)
+```
+
+## Model Creation and Train/Test sets
+
+```{r, message  = FALSE, warning = FALSE, results = "hide", echo = FALSE}
+camryTS <- ts(camryData2$Sales, start = c(2005,1), end = c(2022,10), frequency = 12)
+ravTS <- ts(ravData2$Sales, start = c(2005,1), end = c(2022,10), frequency = 12)
+tacTS <- ts(tacomaData2$Sales, start = c(2005,1), end = c(2022,10), frequency = 12)
+
+plot(camryTS, ylab = "Sales", xlab = "Year", main = "Sales for Toyota Camry")
+plot(ravTS, ylab = "Sales", xlab = "Year", main = "Sales for Toyota RAV4")
+plot(tacTS, ylab = "Sales", xlab = "Year", main = "Sales for Toyota Tacoma")
+
+camryTrain <- subset(camryTS, end = length(camryTS)-6)
+camryTest <- subset(camryTS, start = length(camryTS)-5)
+
+ravTrain <- subset(ravTS, end = length(ravTS)-6)
+ravTest <- subset(ravTS, start = length(ravTS)-5)
+
+tacTrain <- subset(tacTS, end = length(tacTS)-6)
+tacTest <- subset(tacTS, start = length(tacTS)-5)
+```
+
+## Holt-Winters
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Camry
+camryHoltTrain <- HoltWinters(camryTrain)
+camryHolt <- HoltWinters(camryTS)
+
+plot(forecast(camryHolt, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota Camry")
+plot(forecast(camryHolt, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota Camry")
+
+camryTestForecastHW <- camryHoltTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "Holt-Winters vs. Camry Historic Data") + autolayer(camryTest, show.legend=FALSE) + ylab("Camry Sales") + xlab("Year")
+
+camryTestForecastHW
+
+summary(camryHoltTrain)
+
+# RAV4
+ravHoltTrain <- HoltWinters(ravTrain)
+ravHolt <- HoltWinters(ravTS)
+
+plot(forecast(ravHolt, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota RAV4")
+plot(forecast(ravHolt, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota RAV4")
+
+ravTestForecastHW <- ravHoltTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "Holt-Winters vs. RAV4 Historic Data") + autolayer(ravTest, show.legend=FALSE) + ylab("RAV4 Sales") + xlab("Year")
+
+ravTestForecastHW
+
+summary(ravHoltTrain)
+
+# Tacoma
+tacHoltTrain <- HoltWinters(tacTrain)
+tacHolt <- HoltWinters(tacTS)
+
+plot(forecast(tacHolt, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota Tacoma")
+plot(forecast(tacHolt, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota Tacoma")
+
+tacTestForecastHW <- tacHoltTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "Holt-Winters vs. Tacoma Historic Data") + autolayer(tacTest, show.legend=FALSE) + ylab("Tacoma Sales") + xlab("Year")
+
+tacTestForecastHW
+
+summary(tacHoltTrain)
+```
+
+## Auto-Arima
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Camry
+camryArimaTrain <- auto.arima(camryTrain)
+camryArima <- auto.arima(camryTS)
+
+plot(forecast(camryArima, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota Camry")
+plot(forecast(camryArima, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota Camry")
+
+camryTestForecastAR <- camryArimaTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "Auto-ARIMA vs. Camry Historic Data") + autolayer(camryTest, show.legend=FALSE) + ylab("Camry Sales") + xlab("Year")
+
+camryTestForecastAR
+
+summary(camryArimaTrain)
+
+# RAV4
+ravArimaTrain <- auto.arima(ravTrain)
+ravArima <- auto.arima(ravTS)
+
+plot(forecast(ravArima, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota RAV4")
+plot(forecast(ravArima, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota RAV4")
+
+ravTestForecastAR <- ravArimaTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "Auto-ARIMA vs. RAV4 Historic Data") + autolayer(ravTest, show.legend=FALSE) + ylab("RAV4 Sales") + xlab("Year")
+
+ravTestForecastAR
+
+summary(ravArimaTrain)
+
+# Tacoma
+tacArimaTrain <- auto.arima(tacTrain)
+tacArima <- auto.arima(tacTS)
+
+plot(forecast(tacArima, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota Tacoma")
+plot(forecast(tacArima, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota Tacoma")
+
+tacTestForecastAR <- tacArimaTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "Auto-ARIMA vs. Tacoma Historic Data") + autolayer(tacTest, show.legend=FALSE) + ylab("Tacoma Sales") + xlab("Year")
+
+tacTestForecastAR
+
+summary(tacArimaTrain)
+```
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Camry
+camrySTLTrain <- stl(camryTrain, s.window="periodic")
+camrySTL <- stl(camryTS, s.window="periodic")
+
+plot(forecast(camrySTL, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota Camry")
+plot(forecast(camrySTL, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota Camry")
+
+camryTestForecastSTL <- camrySTLTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "STL vs. Camry Historic Data") + autolayer(camryTest, show.legend=FALSE) + ylab("Camry Sales") + xlab("Year")
+
+camryTestForecastSTL
+
+summary(camrySTLTrain)
+
+# RAV4
+ravSTLTrain <- stl(ravTrain, s.window="periodic")
+ravSTL <- stl(ravTS, s.window="periodic")
+
+plot(forecast(ravSTL, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota RAV4")
+plot(forecast(ravSTL, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota RAV4")
+
+ravTestForecastSTL <- ravSTLTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "STL vs. RAV4 Historic Data") + autolayer(ravTest, show.legend=FALSE) + ylab("RAV4 Sales") + xlab("Year")
+
+ravTestForecastSTL
+
+summary(ravSTLTrain)
+
+# Tacoma
+tacSTLTrain <- stl(tacTrain, s.window="periodic")
+tacSTL <- stl(tacTS, s.window="periodic")
+
+plot(forecast(tacSTL, h=12), ylab = "Sales", xlab = "Time", main = "12 Month Prediction for Toyota Tacoma")
+plot(forecast(tacSTL, h=120), ylab = "Sales", xlab = "Time", main = "10 Year Prediction for Toyota Tacoma")
+
+tacTestForecastSTL <- tacSTLTrain %>%
+  forecast(h=6) %>%
+  autoplot(main = "STL vs. Tacoma Historic Data") + autolayer(tacTest, show.legend=FALSE) + ylab("Tacoma Sales") + xlab("Year")
+
+tacTestForecastSTL
+
+summary(tacSTLTrain)
+```
+
+## Accuracy
+
+```{r, message = FALSE, warning = FALSE, echo = FALSE}
+# Camry
+accuracy(forecast(camryHoltTrain, h=6), camryTest)
+accuracy(forecast(camryArimaTrain, h=6), camryTest)
+accuracy(forecast(camrySTLTrain, h=6), camryTest)
+
+# RAV4
+accuracy(forecast(ravHoltTrain, h=6), ravTest)
+accuracy(forecast(ravArimaTrain, h=6), ravTest)
+accuracy(forecast(ravSTLTrain, h=6), ravTest)
+
+# Tacoma
+accuracy(forecast(tacHoltTrain, h=6), tacTest)
+accuracy(forecast(tacArimaTrain, h=6), tacTest)
+accuracy(forecast(tacSTLTrain, h=6), tacTest)
+```
+
+## Additional plots for ease of access
+
+```{r}
+p1 <- plot(camryTS, ylab = "Sales", xlab = "Year", main = "Sales for Toyota Camry")
+p2 <- plot(ravTS, ylab = "Sales", xlab = "Year", main = "Sales for Toyota RAV4")
+p3 <- plot(tacTS, ylab = "Sales", xlab = "Year", main = "Sales for Toyota Tacoma")
+```
+
+## Multivariate Analysis
+
+```{r}
+varData <- merge(camryData2, ravData2, by=c("Year","Month"))
+varData <- merge(varData, tacomaData2, by=c("Year","Month")) %>% mutate(monthNum = case_when(
+                     Month == "Jan" ~ 1,
+                     Month == "Feb" ~ 2,
+                     Month == "Mar" ~ 3,
+                     Month == "Apr" ~ 4,
+                     Month == "May" ~ 5,
+                     Month == "Jun" ~ 6,
+                     Month == "Jul" ~ 7,
+                     Month == "Aug" ~ 8,
+                     Month == "Sep" ~ 9,
+                     Month == "Oct" ~ 10,
+                     Month == "Nov" ~ 11,
+                     Month == "Dec" ~ 12)) %>% dplyr::arrange(Year, monthNum)
+
+
+varData <- varData %>% dplyr::rename(Camry = Sales.x, RAV4 = Sales.y, Tacoma = Sales)
+
+varMat <- as.matrix(varData %>% dplyr::select(Camry, RAV4, Tacoma))
+
+varTS <- ts(varMat, start = c(2005,1), end = c(2022,10), frequency = 12)
+
+varMod <- VAR(varTS)
+
+varPreds <- VARpred(varMod, h = 12)
+forecastMulti <- data.frame(varPreds$pred)
+```
+
+## Multivariate Analysis vs Univariate Analysis
+
+```{r}
+forecastCamrySTL <- data.frame(forecast(camrySTL, h=12))
+forecastRavArima <- data.frame(forecast(ravArima, h=12))
+forecastTacomaArima <- data.frame(forecast(tacArima, h=12))
+
+forecastComparison <- data.frame(cbind(forecastCamrySTL, forecastRavArima, forecastTacomaArima, forecastMulti))
+
+forecastComparison <- forecastComparison %>% dplyr::rename("Camry Univariate" = "Point.Forecast",
+                                             "RAV4 Univariate" = "Point.Forecast.1",
+                                             "Tacoma Univariate" = "Point.Forecast.2",
+                                             "Camry Multivariate" = "Camry",
+                                             "RAV4 Multivariate" = "RAV4",
+                                             "Tacoma Multivariate" = "Tacoma")
+
+forecastComparison <- forecastComparison %>% dplyr::select("Camry Univariate", "RAV4 Univariate", "Tacoma Univariate", "Camry Multivariate", "RAV4 Multivariate", "Tacoma Multivariate")
+```
+

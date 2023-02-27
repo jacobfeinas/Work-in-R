@@ -1,0 +1,155 @@
+---
+title: "Project 1 STAT 545"
+author: "Jacob Feinas, Allyson Goeden, Aaron Barton"
+date: "2022-09-22"
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries
+```{r, message=FALSE}
+library(car)
+library(tidyverse)
+library(ggplot2)
+library(sjPlot)
+```
+
+## Read in CSV Files
+```{r, warning=FALSE, message=FALSE}
+aces.data = read.csv("VB_aces-1.csv")
+assists.data = read.csv("VB_assists-1.csv")
+blocks.data = read.csv("VB_blocks-1.csv")
+digs.data = read.csv("VB_digs-1.csv")
+hitPerc.data = read.csv("VB_hit_perc-1.csv")
+kills.data = read.csv("VB_kills-1.csv")
+oppHits.data = read.csv("VB_opp_hits-1.csv")
+wlPerc.data = read.csv("VB_WL_perc-1.csv")
+```
+
+## Combining and Cleaning Data Frames
+```{r, warning=FALSE, message=FALSE}
+wlBlocks = merge(wlPerc.data, blocks.data, by="Team")
+wlAces = merge(wlPerc.data, aces.data, by="Team")
+wlDigs = merge(wlPerc.data, digs.data, by="Team")
+wlAssists = merge(wlPerc.data, assists.data, by="Team")
+wlHitPerc = merge(wlPerc.data, hitPerc.data, by="Team")
+wlKills = merge(wlPerc.data, kills.data, by="Team")
+wlOppHits = merge(wlPerc.data, oppHits.data, by="Team")
+wlBlocks = wlBlocks %>% dplyr::select(-Rank.x,-X.x,-X.y,-Rank.y)
+wlAces = wlAces %>% dplyr::select(-Rank.x,-X.x,-X.y,-Rank.y)
+wlDigs = wlDigs %>% dplyr::select(-Rank.x,-X.x,-X.y,-Rank.y)
+wlAssists = wlAssists %>% dplyr::select(-Rank.x,-X.x,-X.y,-Rank.y)
+wlHitPerc = wlHitPerc %>% dplyr::select(-Rank.x,-X.x,-X.y,-Rank.y)
+wlKills = wlKills %>% dplyr::select(-Rank.x,-X.x,-X.y,-Rank.y)
+wlOppHits = wlOppHits %>% dplyr::select(-Rank.x,-X.x,-X.y,-Rank.y)
+wlDigs = wlDigs %>% dplyr::slice(-127) #Kansas City had a duplicate, so the slice function deleted that extraneous row
+mean(wlAces$Pct.)
+```
+
+## Linear Models and Plots
+```{r, message=FALSE, fig.height=3.5}
+blocksMod = lm(Pct.~TB, data = wlBlocks)
+acesMod = lm(Pct.~Per.Set, data = wlAces)
+digsMod = lm(Pct.~Per.Set, data = wlDigs)
+assistsMod = lm(Pct.~Per.Set, data = wlAssists)
+hitPercMod = lm(Pct..x~Pct..y, data = wlHitPerc)
+killsMod = lm(Pct.~Per.Set, data = wlKills)
+oppHitsMod = lm(Pct.~Opp.Pct, data = wlOppHits)
+blocksPlot = ggplot(aes(x=TB, y=Pct.), data=wlBlocks)+geom_point()+geom_smooth(method = "lm")+ylab("Win Percentage")+xlab("Total Blocks")
+acesPlot = ggplot(aes(x=Per.Set, y=Pct.), data=wlAces)+geom_point()+geom_smooth(method = "lm")+ylab("Win Percentage")+xlab("Aces per Set")
+digsPlot = ggplot(aes(x=Per.Set, y=Pct.), data=wlDigs)+geom_point()+geom_smooth(method = "lm")+ylab("Win Percentage")+xlab("Digs per Set")
+assistsPlot = ggplot(aes(x=Per.Set, y=Pct.), data=wlAssists)+geom_point()+geom_smooth(method = "lm")+ylab("Win Percentage")+xlab("Assists per Set")
+hitPercPlot = ggplot(aes(x=Pct..y, y=Pct..x), data=wlHitPerc)+geom_point()+geom_smooth(method = "lm")+ylab("Win Percentage")+xlab("Hit Percentage ((Kills-Errors)/Total Attacks)")
+killsPlot = ggplot(aes(x=Per.Set, y=Pct.), data=wlKills)+geom_point()+geom_smooth(method = "lm")+ylab("Win Percentage")+xlab("Kills per Set")
+oppHitsPlot = ggplot(aes(x=Opp.Pct, y=Pct.), data=wlOppHits)+geom_point()+geom_smooth(method = "lm")+ylab("Win Percentage")+xlab("Opponent Hit Percentage ((Kills-Errors)/Total Attacks)")
+blocksPlot
+acesPlot
+digsPlot
+assistsPlot
+hitPercPlot
+killsPlot
+oppHitsPlot
+```
+### Summary of Models and Correlation Models
+```{r, message=FALSE}
+summary(blocksMod)
+summary(acesMod)
+summary(digsMod)
+summary(assistsMod)
+summary(hitPercMod)
+summary(killsMod)
+summary(oppHitsMod)
+
+
+blocksCor = with(cor.test(Pct., TB), data = wlBlocks)
+acesCor = with(cor.test(Pct., Per.Set), data = wlAces)
+digsCor = with(cor.test(Pct., Per.Set), data = wlDigs)
+assistsCor = with(cor.test(Pct., Per.Set), data = wlAssists)
+hitPercCor = with(cor.test(Pct..x, Pct..y), data = wlHitPerc)
+killsCor = with(cor.test(Pct., Per.Set), data = wlKills)
+oppHitsCor = with(cor.test(Pct., Opp.Pct), data = wlOppHits)
+
+blocksCor
+acesCor
+digsCor
+assistsCor
+hitPercCor
+killsCor
+oppHitsCor
+
+str(hitPercCor)
+```
+
+## Forest Plot
+```{r}
+forest_df = data.frame(pred = c("Blocks", "Aces", "Digs", "Assists", "Hit %", "Kills", "Opp. Hit %", "Rank"),
+                   estimate = c(blocksCor$estimate, acesCor$estimate, digsCor$estimate, assistsCor$estimate,  hitPercCor$estimate, killsCor$estimate, oppHitsCor$estimate, -0.872),
+                   low = c(blocksCor$conf.int[1], acesCor$conf.int[1], digsCor$conf.int[1], assistsCor$conf.int[1], hitPercCor$conf.int[1], killsCor$conf.int[1], oppHitsCor$conf.int[1], -0.895),
+                   high = c(blocksCor$conf.int[2], acesCor$conf.int[2], digsCor$conf.int[2], assistsCor$conf.int[2], hitPercCor$conf.int[2], killsCor$conf.int[2], oppHitsCor$conf.int[2], -0.843))
+
+ggplot(data = forest_df, aes(x=pred, y=estimate, ymin=low, ymax=high))+geom_point()+ylim(-1,1)+ylab("Correlation")+xlab("Team Statistic")+ geom_errorbar(width=.05)+coord_flip()
+```
+
+## Methods
+The methodology we used in our analysis was simple linear regression. We collected our data from the official NCAA website (NCAA Women's Division I Volleyball), then we cleaned and merged the data for the team stats with the data for each team's win-loss percentage. Then, we set the explanatory variables to be the respective team stat and the response variable to be win-loss percentage. These stats include aces, blocks (solo blocks + (0.5 * assisted blocks)), digs, assists, hit percentage ((kills-errors)/total attacks), opponent hit percentage, kills, and combined rank (sum of ranks from each team statistic, hereafter referred to as overall rank). Additionally, we combined some of the metrics that resulted in better predictions, and tested them using trial and error to see if any sort of combination would result in a better indicator. From each of these data frames, we created a graph and regression model, without transforming the data. We discovered that transforming or weighting the data did not give us enough of a benefit for fitting a more complex model, and model conditions were assessed and were reasonably upheld. Finally, we based our decision on the best indicator based on the $r$ value, which is the correlation coefficient. For all confidence intervals, we used 95%.
+
+The software we used was R version 4.1.2.
+
+
+## Results
+We found that there were 4 team statistics that were substantial in predicting win percentage. These were assists, kills, hit percentage, and opponent hit percentage. Each produced an absolute value correlation coefficient above 0.72 and p < 0.001. The best of these was hit percentage, with a correlation coefficient of 0.81. This shows a strong, positive relationship, indicating that a team with a relatively high hit percentage would also have a high win percentage. Additionally, opponent hit percentage was also a strong indicator for win percentage, with a correlation coefficient of -0.75, which shows a strong, negative correlation. These two metrics both seem to show the same trend, that the higher a team's hit percentage, the better they will perform. We then fit our models, which took the form of:
+
+$\widehat{y} = \beta_0 + \beta_1x$
+
+Where $\widehat{y}$ is the value of the response variable, $\beta_0$ is the $y$ intercept, $\beta_1$ is the slope, and $x$ is the value of the explanatory variable.
+
+The model that is generated for hit percentage is:
+
+$\widehat{y} = -0.27 + 3.81x$ (Intercept C.I: (-0.34, -0.21) and Slope C.I: (3.51, 4.10))
+  
+And the model for opponent hit percentage is:
+
+$\widehat{y} = 1.51 - 4.90x$ (Intercept C.I: (1.41, 1.60) and Slope C.I: (-5.36, -4.44))
+
+These models become useful when we want to predict a team's win percentage, where we would plug in a team's hit percentage or opponent's hit percentage into the $x$ variable. An important caveat to these models is that they become unreliable past a certain threshold, under 0.07 for hit percentage and over 0.3 for opponent hit percentage. This happens because the prediction falls under 0 for win percentage, which is not possible. Therefore, for the sake of simplicity of not fitting a more complex model for little benefit, we can assume that any team that falls past those values would have a win percentage around 0. There is also an issue with the upper bound where the model estimates a win percentage over 1, but no values in our data set fall past this point in either model.
+
+Another metric we looked at was the overall rank for each team and compared it to win percentage. We found a very strong, negative relationship for this metric, resulting in a correlation coefficient of -0.87. This shows, that the larger the rank value (poorer rank), the lower the win percentage. The model we would use to predict the win percentage of a team based on rank would be:
+
+$\widehat{y} = 1.08 - 0.00056x$ (Intercept C.I: (1.04, 1.11) and Slope C.I: (-0.00059, -0.00053))
+
+#consider both values of truncated model?
+Again, we have to truncate this model, with any rank values above 1930 being considered as a win percentage around 0. There are no values in our data set that approach the cut off point for a win percentage of 1.
+
+Finally, the last few metrics we looked at were some combined statistics, testing multiple different iterations through trial and error. We discovered that the best of these models was hit percentage divided by opponent hit percentage, which produced a correlation coefficient of 0.88, showing a very strong, positive relationship. This supports the conclusion we made above about hit percentage and opponent hit percentage being the best indicators of win percentage by themselves. The model that we would use to predict win percentage of a team based on this metric would be:
+
+#need model format
+
+Once again, we must truncate the model and only use certain values, this time between 0.1 and 2. Any values that fall outside this range should again be treated as a win percentage around 0 and 1 respectively.
+

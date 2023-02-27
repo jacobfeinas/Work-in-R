@@ -1,0 +1,1006 @@
+---
+title: "Independent Research"
+author: "Jacob Feinas"
+date: "`r Sys.Date()`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Libraries
+```{r, warning = FALSE}
+library(tidyverse)
+library(readxl)
+```
+
+## Original Data
+```{r, echo = FALSE}
+originalData <- read_excel("2022 COC Panel Fixed.xlsx")
+```
+
+
+## Academic Planning
+```{r, message=FALSE, warning=FALSE}
+APC <- data.frame(full = c(
+"BOSER,BETH L - CASSH CST Asc Tnr - Conv",
+"DREGNE,WHITNEY KLARYN - CSH Mth Asc Tnr",
+"GENDREAU,THOMAS B - CSH CS Asc Tnr",
+"KOSIAK,JENNIFER J - CSHe Mth Prf Tnr",
+"NANDIALATH,ANUP MENON - CBA Mgt Asc Tnr",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"ROLFHUS,KRISTOFER R - CSH Chm Prf Tnr",
+"STEINER,LINDSAY B - CASSH Eng Asc Tnr",
+"TROST,JENNIFER A - CASSH His Asc Tnr",
+"KEEFE,ANNA VENDLA - CASSH GCL Asc Tnr - Alt",
+"KOMISSAROV,SERGEY A - CBA Acc Asc Tnr - Alt",
+"PANDE,VIVEK V - CBA Acc Asc Tnr - Alt"))
+
+APC <- APC %>% separate(full, c("name", "deptrank", "note"), " - ")
+APC <- APC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+APC.res.ind <- which(originalData$LastName %in% APC$name)
+
+originalData$APC[APC.res.ind] <- "RES"
+
+APC.res.ind
+```
+
+## Academic Technology
+```{r, message=FALSE, warning=FALSE}
+ATC <- data.frame(full = c(
+"BELLAR,WENDI RENEE - CASSH CST Ast",
+"BEYER,KEITH D - CSH Chm Prf Tnr",
+"CHEN,SONG - CSH Mth Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"ERAMUDUGODA GAMAGE,RANDIKA SANJEEWA - CBA Mgt Ast",
+"GREINER,THOMAS - CSH Hpf Asc Tnr",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KIM,EDWARD D - CSH Mth Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KOPP,BRYAN M - CASSH Eng Asc Tnr",
+"KRAGE,VALERIE ANNE - SOE Eds AscTe",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LEVINSON,LINDA C - CASSH Art Prf Tnr",
+"LU,WEIXU - CASSH CST Ast",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"RAES,NICHOLAS ADAM - CASSH CST Lec",
+"SCHWARTZ,CHRISTINE P - CSH Bio Asc Tnr",
+"STOBB,WILLIAM E - CASSH Eng Prf Tnr",
+"SVOBODA,VICTORIA A - CASSH SAA Asc Tnr Chr",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"TUROV,YEVGENIYA - CSH Chm AscTe",
+"VAUGHN,CODY NATHANIEL - CBA Ecn Ast",
+"WHITNEY,EMILY A - CSH HEd Asc Tnr",
+"ZHANG,LEI - CASSH Eng Asc Tnr"))
+
+ATC <- ATC %>% separate(full, c("name", "deptrank", "note"), " - ")
+ATC <- ATC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+ATC.res.ind <- which(originalData$LastName %in% ATC$name)
+
+originalData$ATC[ATC.res.ind] <- "RES"
+```
+
+## Academic Policies and Standards
+```{r, message=FALSE, warning=FALSE}
+CAPS <- data.frame(full = c(
+"ANNINO,DAVID - CBA IS AscTe",
+"CURRENT,MICHAEL D - CASSH Lib Ast Tnr",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LIU,SHIANG - CBA Fin Ast",
+"NEUKOM,JOSHUA D - CSH Chm AscTe",
+"VEERASAMY,SUTHAKARAN - CASSH Psy Ast Tnr"))
+
+CAPS <- CAPS %>% separate(full, c("name", "deptrank", "note"), " - ")
+CAPS <- CAPS %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+CAPS.res.ind <- which(originalData$LastName %in% CAPS$name)
+
+originalData$CAPS[CAPS.res.ind] <- "RES"
+```
+
+## CGAAF
+```{r, message=FALSE, warning=FALSE}
+CGAAF <- data.frame(full = c(
+"BIGEL,ALAN I - CASSH Pol Prf Tnr",
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"CRUTCHFIELD,SUSAN - CASSH Eng Asc Tnr",
+"DEASON,GRACE M - CASSH Psy Asc Tnr",
+"DICKMEYER,LINDA B - CASSH CST Prf Tnr Chr",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KIM,EDWARD D - CSH Mth Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KOPP,BRYAN M - CASSH Eng Asc Tnr",
+"KORTENKAMP,KATHERINE V - CASSH Psy Asc Tnr",
+"LEAHY,RONDA L - CASSH CST Prf Tnr",
+"LONGHURST,JAMES L - CASSH His Prf Tnr",
+"MATCHETT,ANDREW J - CSH Mth Asc Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NARCOTTA-WELP,EILEEN M - CSH ESS Asc Tnr",
+"STAPLETON,ANDREW H - CBA Mgt Prf Tnr",
+"VEERASAMY,SUTHAKARAN - CASSH Psy Ast Tnr",
+"ZHANG,LEI - CASSH Eng Asc Tnr"))
+
+CGAAF <- CGAAF %>% separate(full, c("name", "deptrank", "note"), " - ")
+CGAAF <- CGAAF %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+CGAAF.res.ind <- which(originalData$LastName %in% CGAAF$name)
+
+originalData$CGAAF[CGAAF.res.ind] <- "RES"
+```
+
+## Ethics Advisory
+```{r, message=FALSE, warning=FALSE}
+EAC <- data.frame(full = c(
+"ASCENCIO,CHRISTINE ALICE - CBA Mgt Ast",
+"BELLAR,WENDI RENEE - CASSH CST Ast",
+"BIGEL,ALAN I - CASSH Pol Prf Tnr",
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"CEDERGREN,ANDERS R - CSH HEd Ast Tnr",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"DAMALI,UZAY - CBA Mgt Ast",
+"GARCIA,MERIDETH MARIE - CASSHe Eng Ast",
+"GREINER,THOMAS - CSH Hpf Asc Tnr",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"JOHNSON,KARI L - CSH Mic AstCl",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KOPP,BRYAN M - CASSH Eng Asc Tnr",
+"LAUFENBERG,MAGGIE R - CSH Hpf AstCl",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NASIF,NESE - CBA Mkt Ast",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"PETERSON,JESSICA MARIE - CASSH CST AstTe",
+"ROBERTS,CHARLOTTE E - SOEe Eds Ast",
+"SCHNEIDER,DANIEL C - CASSH Phl Ast",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"VEERASAMY,SUTHAKARAN - CASSH Psy Ast Tnr",
+"WAGNER,SHELDON ERIC - CSH ESS AscTe"))
+
+EAC <- EAC %>% separate(full, c("name", "deptrank", "note"), " - ")
+EAC <- EAC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+EAC.res.ind <- which(originalData$LastName %in% EAC$name)
+
+originalData$EAC[EAC.res.ind] <- "RES"
+```
+
+## Faculty Development
+```{r, message=FALSE, warning=FALSE}
+FDC <- data.frame(full = c(
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"LEACH,MEGAN - CBA Acc Ast",
+"NANDIALATH,ANUP MENON - CBA Mgt Asc Tnr",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"PAUDEL,SHISHIR KUMAR - CBA Fin Ast",
+"TUROV,YEVGENIYA - CSH Chm AscTe",
+"WHITNEY,EMILY A - CSH HEd Asc Tnr",
+"XU,HONGYING - CASSH GCL Asc Tnr"))
+
+FDC <- FDC %>% separate(full, c("name", "deptrank", "note"), " - ")
+FDC <- FDC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+FDC.res.ind <- which(originalData$LastName %in% FDC$name)
+
+originalData$FDC[FDC.res.ind] <- "RES"
+```
+
+## Graduate Academic Program Review
+```{r, message=FALSE, warning=FALSE}
+GAPR <- data.frame(full = c(
+"DAMALI,UZAY - CBA Mgt Ast",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"MITRA,DIPANKAR - CSH CS Ast"))
+
+GAPR <- GAPR %>% separate(full, c("name", "deptrank", "note"), " - ")
+GAPR <- GAPR %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+GAPR.res.ind <- which(originalData$LastName %in% GAPR$name)
+
+originalData$GAPR[GAPR.res.ind] <- "RES"
+```
+
+## General Education
+```{r, message=FALSE, warning=FALSE}
+GEC <- data.frame(full = c(
+"BOSER,BETH L - CASSH CST Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DUTTA,NABAMITA - CBA Ecn Prf Tnr",
+"GENDREAU,THOMAS B - CSH CS Asc Tnr",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KOPP,BRYAN M - CASSH Eng Asc Tnr",
+"LEACH,MEGAN - CBA Acc Ast",
+"MIKA,TERESA LOUISE WHITWORTH - CSH Bio AstTe",
+"MITRA,DIPANKAR - CSH CS Ast",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"PEKDEMIR,RECEP - CBA Acc Ast",
+"SCHNEIDER,DANIEL C - CASSH Phl Ast",
+"TORIBIO,SHERWIN G - CSH Mth Asc Tnr",
+"VEERASAMY,SUTHAKARAN - CASSH Psy Ast Tnr"))
+
+GEC <- GEC %>% separate(full, c("name", "deptrank", "note"), " - ")
+GEC <- GEC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+GEC.res.ind <- which(originalData$LastName %in% GEC$name)
+
+originalData$GEC[GEC.res.ind] <- "RES"
+```
+
+## General Education Assessment
+```{r, message=FALSE, warning=FALSE}
+GEAC <- data.frame(full = c(
+"CEDERGREN,ANDERS R - CSH HEd Ast Tnr",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"DAMALI,UZAY - CBA Mgt Ast",
+"FLEMING,ANNA MARIE - SOE FExp Lec",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"KOPP,BRYAN M - CASSH Eng Asc Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LEACH,MEGAN - CBA Acc Ast",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NEUKOM,JOSHUA D - CSH Chm AscTe",
+"PETERSON,JESSICA MARIE - CASSH CST AstTe",
+"RAES,NICHOLAS ADAM - CASSH CST Lec"))
+
+GEAC <- GEAC %>% separate(full, c("name", "deptrank", "note"), " - ")
+GEAC <- GEAC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+GEAC.res.ind <- which(originalData$LastName %in% GEAC$name)
+
+originalData$GEAC[GEAC.res.ind] <- "RES"
+```
+
+## Graduate Council
+```{r, message=FALSE, warning=FALSE}
+Gradcouncil <- data.frame(full = c(
+"BRUNDAGE,CORD MICHAEL - CSH Bio Lec",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl"))
+
+Gradcouncil <- Gradcouncil %>% separate(full, c("name", "deptrank", "note"), " - ")
+Gradcouncil <- Gradcouncil %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+Gradcouncil.res.ind <- which(originalData$LastName %in% Gradcouncil$name)
+
+originalData$Gradcouncil[Gradcouncil.res.ind] <- "RES"
+```
+
+## IAS
+```{r, message=FALSE, warning=FALSE}
+IAS <- data.frame(full = c(
+"BHATTACHARYYA,BASUDEB - CSH Chm AscTe",
+"CHEN,SONG - CSH Mth Asc Tnr",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"DAMALI,UZAY - CBA Mgt Ast",
+"ESKEW,STEWART SCOTT - CASSH Phl Lec",
+"HART,KAREN STUART - CASSH Eng PrfTe",
+"LAZZARI,MICHAEL A - CSH Mic AscCl",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NEUKOM,JOSHUA D - CSH Chm AscTe",
+"OLSON,MICHELLE R - CSH Hpf AstCl",
+"PETERSON,JESSICA MARIE - CASSH CST AstTe",
+"RAES,NICHOLAS ADAM - CASSH CST Lec",
+"REDMAN,RENEE S - CSH Bio PrfTe",
+"SCHAAF,LUKE J - CASSH Eng AscTe",
+"TUROV,YEVGENIYA - CSH Chm AscTe"))
+
+IAS <- IAS %>% separate(full, c("name", "deptrank", "note"), " - ")
+IAS <- IAS %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+IAS.res.ind <- which(originalData$LastName %in% IAS$name)
+
+originalData$IAS[IAS.res.ind] <- "RES"
+```
+
+## IAS Promotion Committee
+```{r, message=FALSE, warning=FALSE}
+IASPC <- data.frame(full = c(
+"BORAH,NILAKSHI - CBA Fin Asc Tnr",
+"GOLDEN,BENJAMIN JAMES - CASSH ThA AscTe",
+"MORRISON,HEIDI - CASSH His Asc Tnr"))
+
+IASPC <- IASPC %>% separate(full, c("name", "deptrank", "note"), " - ")
+IASPC <- IASPC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+IASPC.res.ind <- which(originalData$LastName %in% IASPC$name)
+
+originalData$IASPC[IASPC.res.ind] <- "RES"
+```
+
+## International Education
+```{r, message=FALSE, warning=FALSE}
+IEC <- data.frame(full = c(
+"BABAKHANI TEIMOURI,SHEIDA - CBA Ecn Asc Tnr",
+"BELLAR,WENDI RENEE - CASSH CST Ast",
+"BORJA RABAGO,JONATHAN - CASSH Mus Asc Tnr",
+"BOSER,BETH L - CASSH CST Asc Tnr",
+"CEDERGREN,ANDERS R - CSH HEd Ast Tnr",
+"CROSBY,ELIZABETH M - CBA Mkt Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DOBBS,WARD C - CSH ESS Ast",
+"ESKEW,STEWART SCOTT - CASSH Phl Lec",
+"GHEIDI,NAGHMEH - CSH ESS Ast Tnr",
+"GIBLIN,NAOKO AMINAKA - CSH ESS Asc Tnr",
+"GOODNOW,REGINA R - CASSH Pol Asc Tnr Chr",
+"GREANY,KRISTIN A - CSH Bio AscTe",
+"HAN,YE - CBA IS Ast",
+"HEASER,SARA A - CASSH Eng AscTe",
+"HER,VINCENT K - CASSH Ant Asc Tnr",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KABASHI,LEMA - SOEe Eds Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"LAN,HAIXIA W - CASSH Eng Prf Tnr",
+"LAUFENBERG,MAGGIE R - CSH Hpf AstCl",
+"LEVINSON,LINDA C - CASSH Art Prf Tnr",
+"LU,WEIXU - CASSH CST Ast",
+"MISHRA,NITI BHUSHAN - CSH Geo Asc Tnr",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NANDIALATH,ANUP MENON - CBA Mgt Asc Tnr",
+"PEACOCK,ELIZABETH A - CASSH Ant Asc Tnr",
+"PEKDEMIR,RECEP - CBA Acc Ast",
+"PFITZINGER,SCOTT G - CASSH Lib Ast Tnr",
+"SAMBU,DANIEL K - CSH Geo Asc Tnr",
+"STROM,MEGAN MARIE - CASSH GCL Asc Tnr",
+"TOLLEFSON,MARY JANEAN - CASSH Mus Asc Tnr Chr",
+"TORIBIO,SHERWIN G - CSH Mth Asc Tnr",
+"XU,HONGYING - CASSH GCL Asc Tnr",
+"YAN,HUIYA - CSH Mth Prf Tnr",
+"ZHANG,LEI - CASSH Eng Asc Tnr"))
+
+IEC <- IEC %>% separate(full, c("name", "deptrank", "note"), " - ")
+IEC <- IEC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+IEC.res.ind <- which(originalData$LastName %in% IEC$name)
+
+originalData$IEC[IEC.res.ind] <- "RES"
+```
+
+## Library
+```{r, message=FALSE, warning=FALSE}
+Library <- data.frame(full = c(
+"ASCENCIO,CHRISTINE ALICE - CBA Mgt Ast",
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"CHEN,WEN-CHIANG R - SOEe Eds Asc Tnr",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DAS,TUSHAR - CSH Mth Asc Tnr",
+"ERAMUDUGODA GAMAGE,RANDIKA SANJEEWA - CBA Mgt Ast",
+"GARCIA,MERIDETH MARIE - CASSHe Eng Ast",
+"GREINER,THOMAS - CSH Hpf Asc Tnr",
+"HAN,YE - CBA IS Ast",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"HEASER,SARA A - CASSH Eng AscTe",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"IWAI,SHUMA - CASSH RGS AscTe",
+"KING,SETH T - CSH Phy Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KRAGE,VALERIE ANNE - SOE Eds AscTe",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LAN,HAIXIA W - CASSH Eng Prf Tnr",
+"MASTERS,HEIDI LYNN - SOEe Eds Asc",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NARCOTTA-WELP,EILEEN M - CSH ESS Asc Tnr",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"ROSS JR,WILLIAM H - CBA Mgt Prf Tnr",
+"SAUPPE,JASON J - CSH CS Ast Tnr",
+"SCHAAF,LUKE J - CASSH Eng AscTe",
+"STOBB,WILLIAM E - CASSH Eng Prf Tnr",
+"STRAUSS,ERIC A - CSH Bio Prf Tnr",
+"ZHANG,LEI - CASSH Eng Asc Tnr"))
+
+Library <- Library %>% separate(full, c("name", "deptrank", "note"), " - ")
+Library <- Library %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+Library.res.ind <- which(originalData$LastName %in% Library$name)
+
+originalData$Library[Library.res.ind] <- "RES"
+```
+
+## Promotion, Tenure, and Salary
+```{r, message=FALSE, warning=FALSE}
+PTS <- data.frame(full = c(
+"BIGEL,ALAN I - CASSH Pol Prf Tnr",
+"BORAH,NILAKSHI - CBA Fin Asc Tnr",
+"BOSER,BETH L - CASSH CST Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DAS,TUSHAR - CSH Mth Asc Tnr",
+"GHEIDI,NAGHMEH - CSH ESS Ast Tnr",
+"HER,VINCENT K - CASSH Ant Asc Tnr",
+"HYSON,DANIEL M - CASSHe Psy Asc Tnr",
+"KIERSCH,CHRISTA E - CBA Mgt Asc Tnr",
+"LONGHURST,JAMES L - CASSH His Prf Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NANDIALATH,ANUP MENON - CBA Mgt Asc Tnr",
+"NARCOTTA-WELP,EILEEN M - CSH ESS Asc Tnr",
+"PERIYASAMY,KASILINGAM - CSH CS Prf Tnr",
+"ZHANG,LEI - CASSH Eng Asc Tnr"))
+
+PTS <- PTS %>% separate(full, c("name", "deptrank", "note"), " - ")
+PTS <- PTS %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+PTS.res.ind <- which(originalData$LastName %in% PTS$name)
+
+originalData$PTS[PTS.res.ind] <- "RES"
+```
+
+## Research and Grants
+```{r, message=FALSE, warning=FALSE}
+RGC <- data.frame(full = c(
+"BABAKHANI TEIMOURI,SHEIDA - CBA Ecn Asc Tnr",
+"BEYER,KEITH D - CSH Chm Prf Tnr",
+"BORJA RABAGO,JONATHAN - CASSH Mus Asc Tnr",
+"BREAUX,RICHARD M - CASSH RGS Asc Tnr",
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"CALDWELL,JACOB TROY - CSH ESS Ast",
+"CEDERGREN,ANDERS R - CSH HEd Ast Tnr",
+"CHEN,SONG - CSH Mth Asc Tnr",
+"CURRENT,MICHAEL D - CASSH Lib Ast Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DAVELOS,ANITA LYNNE - CSH Bio Asc Tnr",
+"DEASON,GRACE M - CASSH Psy Asc Tnr",
+"DRISCOLL,ADAM ROURKE - CASSH Soc Ast Tnr",
+"GHEIDI,NAGHMEH - CSH ESS Ast Tnr",
+"GILMORE,GARY D - CSH HEd Prf Tnr",
+"GREINER,THOMAS - CSH Hpf Asc Tnr",
+"HEASER,SARA A - CASSH Eng AscTe",
+"KIL,NAM YUN - CSH Rec Ast",
+"KING,SETH T - CSH Phy Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LIU,SHIANG - CBA Fin Ast",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NANDIALATH,ANUP MENON - CBA Mgt Asc Tnr",
+"OSMUNDSON,TODD W - CSH Bio Prf Tnr",
+"SAMBU,DANIEL K - CSH Geo Asc Tnr",
+"SCHNEIDER,DANIEL C - CASSH Phl Ast",
+"SCHUMANN,DAVID J - CSH Bio Ast",
+"STARCK,JENNA R - CSHe ESS Ast",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"VAUGHN,CODY NATHANIEL - CBA Ecn Ast",
+"WILKER,PETER R - CSH Mic Asc Tnr",
+"XU,HONGYING - CASSH GCL Asc Tnr",
+"ZABEL,KEVIN LEE - CASSH Psy Ast",
+"ZHANG,LEI - CASSH Eng Asc Tnr"))
+
+RGC <- RGC %>% separate(full, c("name", "deptrank", "note"), " - ")
+RGC <- RGC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+RGC.res.ind <- which(originalData$LastName %in% RGC$name)
+
+originalData$RGC[RGC.res.ind] <- "RES"
+```
+
+## Scholarships and Awards
+```{r, message=FALSE, warning=FALSE}
+SAC <- data.frame(full = c(
+"ANNINO,DAVID - CBA IS AscTe",
+"BEYER,KEITH D - CSH Chm Prf Tnr",
+"BIGEL,ALAN I - CASSH Pol Prf Tnr",
+"BINGHAM,MELISSA A - CSH Mth Prf Tnr",
+"BOSER,BETH L - CASSH CST Asc Tnr",
+"BREAUX,RICHARD M - CASSH RGS Asc Tnr",
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"CHEN,SONG - CSH Mth Asc Tnr",
+"CHERGOSKY,ANTHONY JACOB - CASSH Pol Ast",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"CURRENT,MICHAEL D - CASSH Lib Ast Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DEFAZIO,KIMBERLY - CASSH Eng Asc Tnr",
+"DRISCOLL,ADAM ROURKE - CASSH Soc Ast Tnr",
+"GHEIDI,NAGHMEH - CSH ESS Ast Tnr",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"HART,KAREN STUART - CASSH Eng PrfTe",
+"HEASER,SARA A - CASSH Eng AscTe",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KRAGE,VALERIE ANNE - SOE Eds AscTe",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LAVELLE,KATHERINE L - CASSH CST Asc Tnr",
+"LAZZARI,MICHAEL A - CSH Mic AscCl",
+"LEACH,MEGAN - CBA Acc Ast",
+"LEVINSON,LINDA C - CASSH Art Prf Tnr",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NELSON,KENDRIC J - CSH Chm Ast Tnr",
+"NEUKOM,JOSHUA D - CSH Chm AscTe",
+"OLSON,MICHELLE R - CSH Hpf AstCl",
+"PITOT,LISA NOEL - SOEe Eds Ast",
+"ROSS JR,WILLIAM H - CBA Mgt Prf Tnr",
+"SCHWARTZ,CHRISTINE P - CSH Bio Asc Tnr",
+"SEN,SUJAT - CSH Chm Ast",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"TOLLEFSON,MARY JANEAN - CASSH Mus Asc Tnr Chr",
+"TORIBIO,SHERWIN G - CSH Mth Asc Tnr",
+"TUROV,YEVGENIYA - CSH Chm AscTe",
+"VAUGHN,CODY NATHANIEL - CBA Ecn Ast",
+"VEERASAMY,SUTHAKARAN - CASSH Psy Ast Tnr",
+"WAGNER,SHELDON ERIC - CSH ESS AscTe",
+"WARNBERG,NATHAN JOEL - CSH Mth Asc Tnr",
+"WHITNEY,EMILY A - CSH HEd Asc Tnr",
+"WISINSKI,JACLYN ANNE - CSH Bio Ast",
+"XU,HONGYING - CASSH GCL Asc Tnr",
+"ZABEL,KEVIN LEE - CASSH Psy Ast"))
+
+SAC <- SAC %>% separate(full, c("name", "deptrank", "note"), " - ")
+SAC <- SAC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+SAC.res.ind <- which(originalData$LastName %in% SAC$name)
+
+originalData$SAC[SAC.res.ind] <- "RES"
+```
+
+## Undergraduate Academic Program Review
+```{r, message=FALSE, warning=FALSE}
+UAPR <- data.frame(full = c(
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"KOPP,BRYAN M - CASSH Eng Asc Tnr",
+"MITRA,DIPANKAR - CSH CS Ast",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"WHITNEY,EMILY A - CSH HEd Asc Tnr"))
+
+UAPR <- UAPR %>% separate(full, c("name", "deptrank", "note"), " - ")
+UAPR <- UAPR %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+UAPR.res.ind <- which(originalData$LastName %in% UAPR$name)
+
+originalData$UAPR[UAPR.res.ind] <- "RES"
+```
+
+## Undergraduate Curriculum
+```{r, message=FALSE, warning=FALSE}
+UCC <- data.frame(full = c(
+"BOSER,BETH L - CASSH CST Asc Tnr",
+"CEDERGREN,ANDERS R - CSH HEd Ast Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"EPSTEIN,ANN M - SOEe Eds Prf Tnr",
+"ESKEW,STEWART SCOTT - CASSH Phl Lec",
+"FLEMING,ANNA MARIE - SOE FExp Lec",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KIM,EDWARD D - CSH Mth Asc Tnr",
+"KIRSCH,JANET E - CSH Chm Asc Tnr",
+"LEACH,MEGAN - CBA Acc Ast",
+"PETERSON,JESSICA MARIE - CASSH CST AstTe",
+"SAUPPE,JASON J - CSH CS Ast Tnr",
+"SCHAAF,LUKE J - CASSH Eng AscTe",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"TORIBIO,SHERWIN G - CSH Mth Asc Tnr",
+"XU,HONGYING - CASSH GCL Asc Tnr"))
+
+UCC <- UCC %>% separate(full, c("name", "deptrank", "note"), " - ")
+UCC <- UCC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+UCC.res.ind <- which(originalData$LastName %in% UCC$name)
+
+originalData$UCC[UCC.res.ind] <- "RES"
+```
+
+## Undergraduare Research
+```{r, message=FALSE, warning=FALSE}
+URC <- data.frame(full = c(
+"ANDERSON,ROBERT BRANDON - CASSH CST Ast",
+"BOSER,BETH L - CASSH CST Asc Tnr",
+"BRUNDAGE,CORD MICHAEL - CSH Bio Lec",
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"CALDWELL,JACOB TROY - CSH ESS Ast",
+"CEDERGREN,ANDERS R - CSH HEd Ast Tnr",
+"CHEN,SONG - CSH Mth Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DAVELOS,ANITA LYNNE - CSH Bio Asc Tnr",
+"DOBBS,WARD C - CSH ESS Ast",
+"DRISCOLL,ADAM ROURKE - CASSH Soc Ast Tnr",
+"ESKEW,STEWART SCOTT - CASSH Phl Lec",
+"GALBRAITH,ANNE M - CSH Bio Asc Tnr",
+"GHEIDI,NAGHMEH - CSH ESS Ast Tnr",
+"GIBLIN,NAOKO AMINAKA - CSH ESS Asc Tnr",
+"GOODNOW,REGINA R - CASSH Pol Asc Tnr Chr",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"HART,KAREN STUART - CASSH Eng PrfTe",
+"HEASER,SARA A - CASSH Eng AscTe",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KING,SETH T - CSH Phy Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LU,WEIXU - CASSH CST Ast",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NANDIALATH,ANUP MENON - CBA Mgt Asc Tnr",
+"NASIF,NESE - CBA Mkt Ast",
+"OSMUNDSON,TODD W - CSH Bio Prf Tnr",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"PEACOCK,ELIZABETH A - CASSH Ant Asc Tnr",
+"PITOT,LISA NOEL - SOEe Eds Ast",
+"PLUNKETT,DANIEL K - CSH Rec Asc Tnr",
+"SANDERFOOT,ANTON A - CSH Bio Asc Tnr",
+"SCHAAF,LUKE J - CASSH Eng AscTe",
+"SCHUMANN,DAVID J - CSH Bio Ast",
+"SEN,SUJAT - CSH Chm Ast",
+"STOVEY,PATRICIA ANN - CASSH His Ast Tnr",
+"STRAUSS,ERIC A - CSH Bio Prf Tnr",
+"STROM,MEGAN MARIE - CASSH GCL Asc Tnr",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"WARNBERG,NATHAN JOEL - CSH Mth Asc Tnr",
+"WILKER,PETER R - CSH Mic Asc Tnr",
+"WISINSKI,JACLYN ANNE - CSH Bio Ast",
+"ZABEL,KEVIN LEE - CASSH Psy Ast",
+"ZHANG,LEI - CASSH Eng Asc Tnr"))
+
+URC <- URC %>% separate(full, c("name", "deptrank", "note"), " - ")
+URC <- URC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+URC.res.ind <- which(originalData$LastName %in% URC$name)
+
+originalData$URC[URC.res.ind] <- "RES"
+```
+
+## University Program Assessment Committee
+```{r, message=FALSE, warning=FALSE}
+UPAC <- data.frame(full = c(
+"BABAKHANI TEIMOURI,SHEIDA - CBA Ecn Asc Tnr",
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"DAMALI,UZAY - CBA Mgt Ast",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NEWTON,JOCELYN H - CASSHe Psy Prf Tnr Chr",
+"THAKKAR,TANVI D - CASSH Psy Lec"))
+
+UPAC <- UPAC %>% separate(full, c("name", "deptrank", "note"), " - ")
+UPAC <- UPAC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+UPAC.res.ind <- which(originalData$LastName %in% UPAC$name)
+
+originalData$UPAC[UPAC.res.ind] <- "RES"
+```
+
+## Joint - Environmental Sustainability
+```{r, message=FALSE, warning=FALSE}
+JES <- data.frame(full = c(
+"ASCENCIO,CHRISTINE ALICE - CBA Mgt Ast",
+"GOLDEN,BENJAMIN JAMES - CASSH ThA AscTe",
+"GOODNOW,REGINA R - CASSH Pol Asc Tnr Chr",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"KORTENKAMP,KATHERINE V - CASSH Psy Asc Tnr",
+"KRAGE,VALERIE ANNE - SOE Eds AscTe",
+"NEUKOM,JOSHUA D - CSH Chm AscTe",
+"PETTIT,MICHELE L - CSH HEd Asc Tnr",
+"SCHNEIDER,DANIEL C - CASSH Phl Ast",
+"SCHWARTZ,CHRISTINE P - CSH Bio Asc Tnr",
+"WHITNEY,EMILY A - CSH HEd Asc Tnr"))
+
+JES <- JES %>% separate(full, c("name", "deptrank", "note"), " - ")
+JES <- JES %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+JES.res.ind <- which(originalData$LastName %in% JES$name)
+
+originalData$JEnvSus[JES.res.ind] <- "RES"
+```
+
+## Joint Committee on Free Speech Promotion
+```{r, message=FALSE, warning=FALSE}
+JCFSP <- data.frame(full = c(
+"ANDERSON,ROBERT BRANDON - CASSH CST Ast",
+"BABAKHANI TEIMOURI,SHEIDA - CBA Ecn Asc Tnr",
+"CHERGOSKY,ANTHONY JACOB - CASSH Pol Ast",
+"DUTTA,NABAMITA - CBA Ecn Prf Tnr",
+"GREINER,THOMAS - CSH Hpf Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NARCOTTA-WELP,EILEEN M - CSH ESS Asc Tnr",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"PETTIT,MICHELE L - CSH HEd Asc Tnr",
+"ROBERTS,CHARLOTTE E - SOEe Eds Ast",
+"WYMAN,CHELSEA T - CASSH Lib Ast",
+"ZAMPARUTTI,LOUISE E - CASSH Eng Ast"))
+
+JCFSP <- JCFSP %>% separate(full, c("name", "deptrank", "note"), " - ")
+JCFSP <- JCFSP %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+JCFSP.res.ind <- which(originalData$LastName %in% JCFSP$name)
+
+originalData$JCFSP[JCFSP.res.ind] <- "RES"
+```
+
+## Joint - Multicultural Affairs
+```{r, message=FALSE, warning=FALSE}
+JMAC <- data.frame(full = c(
+"BABAKHANI TEIMOURI,SHEIDA - CBA Ecn Asc Tnr",
+"CHEN,SONG - CSH Mth Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"ESKEW,STEWART SCOTT - CASSH Phl Lec",
+"GIBLIN,NAOKO AMINAKA - CSH ESS Asc Tnr",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KABASHI,LEMA - SOEe Eds Asc Tnr",
+"KOPP,BRYAN M - CASSH Eng Asc Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NARCOTTA-WELP,EILEEN M - CSH ESS Asc Tnr",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"PETTIT,MICHELE L - CSH HEd Asc Tnr",
+"SANDERFOOT,ANTON A - CSH Bio Asc Tnr",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"TUROV,YEVGENIYA - CSH Chm AscTe",
+"WYMAN,CHELSEA T - CASSH Lib Ast"))
+
+JMAC <- JMAC %>% separate(full, c("name", "deptrank", "note"), " - ")
+JMAC <- JMAC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+JMAC.res.ind <- which(originalData$LastName %in% JMAC$name)
+
+originalData$JMAC[JMAC.res.ind] <- "RES"
+```
+
+## Joint - Planning & Budget
+```{r, message=FALSE, warning=FALSE}
+JPB <- data.frame(full = c(
+"DAMALI,UZAY - CBA Mgt Ast",
+"NANDIALATH,ANUP MENON - CBA Mgt Asc Tnr",
+"ORMES,GREGORY F - CASSH CST Ast Tnr",
+"WAGNER,SHELDON ERIC - CSH ESS AscTe",
+"WILKER,PETER R - CSH Mic Asc Tnr"))
+
+JPB <- JPB %>% separate(full, c("name", "deptrank", "note"), " - ")
+JPB <- JPB %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+JPB.res.ind <- which(originalData$LastName %in% JPB$name)
+
+originalData$JPB[JPB.res.ind] <- "RES"
+```
+
+## Joint - Legislative / Regents
+```{r, message=FALSE, warning=FALSE}
+LegReg <- data.frame(full = c(
+"APONTE-SAFE,GERARDO JOEL - SOEe Eds Ast",
+"BIGEL,ALAN I - CASSH Pol Prf Tnr",
+"CEDERGREN,ANDERS R - CSH HEd Ast Tnr",
+"DAVELOS,ANITA LYNNE - CSH Bio Asc Tnr",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"LONGHURST,JAMES L - CASSH His Prf Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"PETERSON,JESSICA MARIE - CASSH CST AstTe",
+"PETULLO,WILLIAM M - CSH CS Ast",
+"THAKKAR,TANVI D - CASSH Psy Lec"))
+
+LegReg <- LegReg %>% separate(full, c("name", "deptrank", "note"), " - ")
+LegReg <- LegReg %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+LegReg.res.ind <- which(originalData$LastName %in% LegReg$name)
+
+originalData$LegReg[LegReg.res.ind] <- "RES"
+```
+
+## Parking Appeals
+```{r, message=FALSE, warning=FALSE}
+PA <- data.frame(full = c(
+"BIGEL,ALAN I - CASSH Pol Prf Tnr",
+"CAMPBELL,PATRICIA A - CSH Hpf AscCl",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"DAMALI,UZAY - CBA Mgt Ast",
+"GREINER,THOMAS - CSH Hpf Asc Tnr",
+"HOFFER,ADAM J - CBA Ecn Asc Tnr",
+"KING,SETH T - CSH Phy Asc Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LEACH,MEGAN - CBA Acc Ast",
+"MASTERS,HEIDI LYNN - SOEe Eds Asc",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"REDMAN,RENEE S - CSH Bio PrfTe",
+"TAYLOR,JENNIFER DAWN - CSH Rec Ast",
+"TUROV,YEVGENIYA - CSH Chm AscTe",
+"TUTTLE ROSS,SHERYL - CASSH Phl Prf Tnr",
+"WILKER,PETER R - CSH Mic Asc Tnr"))
+
+PA <- PA %>% separate(full, c("name", "deptrank", "note"), " - ")
+PA <- PA %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+PA.res.ind <- which(originalData$LastName %in% PA$name)
+
+originalData$PkgAppls[PA.res.ind] <- "RES"
+```
+
+## Textbook Services Oversight
+```{r, message=FALSE, warning=FALSE}
+TSO <- data.frame(full = c(
+"BIGEL,ALAN I - CASSH Pol Prf Tnr",
+"BOSER,BETH L - CASSH CST Asc Tnr",
+"CRUTCHFIELD,SUSAN - CASSH Eng Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DEASON,GRACE M - CASSH Psy Asc Tnr",
+"FOWLER,REBEKAH M - CASSH Eng Asc Tnr",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"IGUCHI,GERALD S - CASSH His Asc Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LONGHURST,JAMES L - CASSH His Prf Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"PARMETER,GREGORY GEORGE - CASSH ThA Ast",
+"TUROV,YEVGENIYA - CSH Chm AscTe",
+"VAUGHN,CODY NATHANIEL - CBA Ecn Ast",
+"XU,HONGYING - CASSH GCL Asc Tnr"))
+
+TSO <- TSO %>% separate(full, c("name", "deptrank", "note"), " - ")
+TSO <- TSO %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+TSO.res.ind <- which(originalData$LastName %in% TSO$name)
+
+originalData$TxtBook[TSO.res.ind] <- "RES"
+```
+
+## Student - Academic Initiatives
+```{r, message=FALSE, warning=FALSE}
+AIDAC <- data.frame(full = c(
+"APONTE-SAFE,GERARDO JOEL - SOEe Eds Ast",
+"DAMALI,UZAY - CBA Mgt Ast",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"LEACH,MEGAN - CBA Acc Ast",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"PETERSON,JESSICA MARIE - CASSH CST AstTe"))
+
+AIDAC <- AIDAC %>% separate(full, c("name", "deptrank", "note"), " - ")
+AIDAC <- AIDAC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+AIDAC.res.ind <- which(originalData$LastName %in% AIDAC$name)
+
+originalData$AIDAC[AIDAC.res.ind] <- "RES"
+```
+
+## Student - Athletics
+```{r, message=FALSE, warning=FALSE}
+ATH <- data.frame(full = c(
+"ANNINO,DAVID - CBA IS AscTe",
+"CEDERGREN,ANDERS R - CSH HEd Ast Tnr",
+"CHERGOSKY,ANTHONY JACOB - CASSH Pol Ast",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DAVELOS,ANITA LYNNE - CSH Bio Asc Tnr",
+"DOBBS,WARD C - CSH ESS Ast",
+"HOFFER,ADAM J - CBA Ecn Asc Tnr",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NARCOTTA-WELP,EILEEN M - CSH ESS Asc Tnr",
+"REDMAN,RENEE S - CSH Bio PrfTe",
+"ROBERTS,CHARLOTTE E - SOEe Eds Ast",
+"SCHMIDT,SAMUEL - CSH ESS Ast",
+"STOBB,WILLIAM E - CASSH Eng Prf Tnr",
+"WISINSKI,JACLYN ANNE - CSH Bio Ast",
+"ZABEL,KEVIN LEE - CASSH Psy Ast"))
+
+ATH <- ATH %>% separate(full, c("name", "deptrank", "note"), " - ")
+ATH <- ATH %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+ATH.res.ind <- which(originalData$LastName %in% ATH$name)
+
+originalData$Ath[ATH.res.ind] <- "RES"
+```
+
+## Student - Campus Community Enrichment Fund Committee
+```{r, message=FALSE, warning=FALSE}
+CCEFC <- data.frame(full = c(
+"BHATTACHARYYA,BASUDEB - CSH Chm AscTe",
+"CHEN,SONG - CSH Mth Asc Tnr",
+"CHERGOSKY,ANTHONY JACOB - CASSH Pol Ast",
+"CRUTCHFIELD,SUSAN - CASSH Eng Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"LAUFENBERG,MAGGIE R - CSH Hpf AstCl",
+"LEACH,MEGAN - CBA Acc Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"ZABEL,KEVIN LEE - CASSH Psy Ast"))
+
+CCEFC <- CCEFC %>% separate(full, c("name", "deptrank", "note"), " - ")
+CCEFC <- CCEFC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+CCEFC.res.ind <- which(originalData$LastName %in% CCEFC$name)
+
+originalData$CCEFC[CCEFC.res.ind] <- "RES"
+```
+
+## Student - Legislative Affairs
+```{r, message=FALSE, warning=FALSE}
+SLA <- data.frame(full = c(
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"DAVELOS,ANITA LYNNE - CSH Bio Asc Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr"))
+
+SLA <- SLA %>% separate(full, c("name", "deptrank", "note"), " - ")
+SLA <- SLA %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+SLA.res.ind <- which(originalData$LastName %in% SLA$name)
+
+originalData$LegAffrs[SLA.res.ind] <- "RES"
+```
+
+## Student - Organizations
+```{r, message=FALSE, warning=FALSE}
+SOrg <- data.frame(full = c(
+"BABAKHANI TEIMOURI,SHEIDA - CBA Ecn Asc Tnr",
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"CHERGOSKY,ANTHONY JACOB - CASSH Pol Ast",
+"CLUPPERT,INGA JOHANNA - CSH Hpf AstCl",
+"CRUTCHFIELD,SUSAN - CASSH Eng Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"KABASHI,LEMA - SOEe Eds Asc Tnr",
+"KUMM-SCHALEY,BRIAN EDWARD - CSH Rec Asc Tnr",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"PFITZINGER,SCOTT G - CASSH Lib Ast Tnr",
+"REDMAN,RENEE S - CSH Bio PrfTe",
+"THAKKAR,TANVI D - CASSH Psy Lec",
+"TUROV,YEVGENIYA - CSH Chm AscTe",
+"WHITNEY,EMILY A - CSH HEd Asc Tnr",
+"WISINSKI,JACLYN ANNE - CSH Bio Ast",
+"ZIMMERMAN,MARY ANN - CSH Bio Ast"))
+
+SOrg <- SOrg %>% separate(full, c("name", "deptrank", "note"), " - ")
+SOrg <- SOrg %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+SOrg.res.ind <- which(originalData$LastName %in% SOrg$name)
+
+originalData$Org[SOrg.res.ind] <- "RES"
+```
+
+## Student - Services & Buildings
+```{r, message=FALSE, warning=FALSE}
+SSB <- data.frame(full = c(
+"BUTLER MODAFF,JENNIFER - CASSH CST Asc Tnr",
+"DAMALI,UZAY - CBA Mgt Ast",
+"IWAI,SHUMA - CASSH RGS AscTe",
+"MITRA,DIPANKAR - CSH CS Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"PFITZINGER,SCOTT G - CASSH Lib Ast Tnr",
+"WHITNEY,EMILY A - CSH HEd Asc Tnr"))
+
+SSB <- SSB %>% separate(full, c("name", "deptrank", "note"), " - ")
+SSB <- SSB %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+SSB.res.ind <- which(originalData$LastName %in% SSB$name)
+
+originalData$ServBldg[SSB.res.ind] <- "RES"
+```
+
+## Student - Segregated University Fee Allocation
+```{r, message=FALSE, warning=FALSE}
+SUFAC <- data.frame(full = c(
+"DAMALI,UZAY - CBA Mgt Ast",
+"FISHER,TAMMY M - CASSHe Mus Asc Tnr",
+"LEACH,MEGAN - CBA Acc Ast",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"NARCOTTA-WELP,EILEEN M - CSH ESS Asc Tnr",
+"PETERSON,JESSICA MARIE - CASSH CST AstTe"))
+
+SUFAC <- SUFAC %>% separate(full, c("name", "deptrank", "note"), " - ")
+SUFAC <- SUFAC %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+SUFAC.res.ind <- which(originalData$LastName %in% SUFAC$name)
+
+originalData$SUFAC[SUFAC.res.ind] <- "RES"
+```
+
+## Student - Green Fund
+```{r, message=FALSE, warning=FALSE}
+GREEFND <- data.frame(full = c(
+"DAMALI,UZAY - CBA Mgt Ast",
+"GOODNOW,REGINA R - CASSH Pol Asc Tnr Chr",
+"HARDY,PENELOPE KATE - CASSH His Ast",
+"KOLBE,AMANDA JOY - CASSH ThA Ast Tnr",
+"KOPP,BRYAN M - CASSH Eng Asc Tnr",
+"KRAGE,VALERIE ANNE - SOE Eds AscTe",
+"MORRISON,HEIDI - CASSH His Asc Tnr",
+"SAMBU,DANIEL K - CSH Geo Asc Tnr",
+"SCHAAF,LUKE J - CASSH Eng AscTe"))
+
+GREEFND <- GREEFND %>% separate(full, c("name", "deptrank", "note"), " - ")
+GREEFND <- GREEFND %>% separate(deptrank, c("college", "dept", "rank", "tnr"), " ")
+
+GREEFND.res.ind <- which(originalData$LastName %in% GREEFND$name)
+
+originalData$GREEFND[GREEFND.res.ind] <- "RES"
+```

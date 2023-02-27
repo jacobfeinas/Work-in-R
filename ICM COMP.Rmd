@@ -1,0 +1,241 @@
+---
+title: "ICM COMP"
+author: "Jacob Feinas"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library(rvest)
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+library(forcats)
+library(MASS)
+library(kableExtra)
+```
+
+```{r}
+# Data scraping
+epiVec <- c("epi", "eco", "bdh", "bhv", "tcl", "fsh", "agr", "wrs", "hlt", "wmg", "pcc", "gib", "ghp")
+urls <- NULL
+for (i in 1:length(epiVec)){
+  urls[i] <- str_c("https://epi.yale.edu/epi-results/2022/component/", epiVec[i])
+}
+
+list <- list()
+for (i in 1:length(urls)){
+  epiUrl <- read_html(urls[i])
+  epi <- epiUrl %>% html_nodes("table")
+  list[i] <- epi %>% html_table
+}
+```
+
+```{r}
+ghg <- read_xls("GHG.xls")
+ghg <- na.omit(ghg)
+ghg <- pivot_longer(ghg, cols=`1990`:`2019`, names_to = "Year", values_to = "GHG Emissions")
+```
+
+```{r}
+gdp <- read_xls("GDP.xls")
+gdp <- gdp %>% filter(gdp$`Country Name` %in% ghg$`Country Name`)
+gdp <- na.omit(gdp)
+ghg <- ghg %>% filter(ghg$`Country Name` %in% gdp$`Country Name`)
+gdp <- pivot_longer(gdp, cols=`1990`:`2019`, names_to = "Year", values_to = "GDP")
+```
+
+```{r}
+water <- read_xls("annualFreshwaterWithdrawal.xls")
+water <- water %>% filter(water$`Country Name` %in% ghg$`Country Name`)
+water <- na.omit(water)
+ghg <- ghg %>% filter(ghg$`Country Name` %in% water$`Country Name`)
+gdp <- gdp %>% filter(gdp$`Country Name` %in% water$`Country Name`)
+water <- pivot_longer(water, cols=`1990`:`2019`, names_to = "Year", values_to = "Water Usage")
+```
+
+```{r}
+gdpFull <- merge(gdp, ghg, by=c("Country Name", "Year"))
+gdpFull2 <- merge(gdpFull, water, by=c("Country Name", "Year"))
+```
+
+```{r}
+fossilFuels <- read.csv("fossil-fuel-primary-energy.csv", header=T, na.strings=c("","NA"))
+fossilFuels <- na.omit(fossilFuels)
+
+fossilFuels = fossilFuels[fossilFuels$Year>=1990, ]
+colnames(fossilFuels)[1] = "Country Name"
+colnames(fossilFuels)[4] = "Fossil Fuels"
+fossilFuels <- fossilFuels %>% dplyr::select(-Code)
+
+gdpFull3 <- merge(gdpFull2, fossilFuels, by=c("Country Name", "Year"))
+```
+
+```{r}
+waterStrain <- read_xls("waterstrain.xls")
+waterStrain <- waterStrain %>% filter(waterStrain$`Country Name` %in% gdpFull3$`Country Name`)
+waterStrain <- na.omit(waterStrain)
+waterStrain <- pivot_longer(waterStrain, cols=`1990`:`2019`, names_to = "Year", values_to = "Water Strain")
+gdpFull4 <- merge(gdpFull3, waterStrain, by=c("Country Name", "Year"))
+
+colnames(gdpFull4)[7] = "Water Strain"
+colnames(gdpFull4)[5] = "Water Usage"
+```
+
+```{r}
+solidWaste <- read.csv("solidwaste.csv")
+solidWaste <- solidWaste %>% filter(solidWaste$`Country.Name` %in% gdpFull4$`Country Name`)
+
+wasteMax <- solidWaste$Total.MSW.by.Ton.per.year[8]
+wasteMin <- solidWaste$Total.MSW.by.Ton.per.year[24]
+fivenum <- fivenum(solidWaste$Total.MSW.by.Ton.per.year)
+
+solidWaste$Total.MSW.by.Ton.per.year <- replace(solidWaste$Total.MSW.by.Ton.per.year, solidWaste$Total.MSW.by.Ton.per.year <= fivenum[2], 1)
+
+solidWaste$Total.MSW.by.Ton.per.year <- replace(solidWaste$Total.MSW.by.Ton.per.year, solidWaste$Total.MSW.by.Ton.per.year >= fivenum[2] & solidWaste$Total.MSW.by.Ton.per.year <= fivenum[3], 2)
+
+solidWaste$Total.MSW.by.Ton.per.year <- replace(solidWaste$Total.MSW.by.Ton.per.year, solidWaste$Total.MSW.by.Ton.per.year >= fivenum[3] & solidWaste$Total.MSW.by.Ton.per.year <= fivenum[4], 3)
+
+solidWaste$Total.MSW.by.Ton.per.year <- replace(solidWaste$Total.MSW.by.Ton.per.year, solidWaste$Total.MSW.by.Ton.per.year >= fivenum[4], 4)
+
+solidWaste$Total.MSW.by.Ton.per.year <- as.factor(solidWaste$Total.MSW.by.Ton.per.year)
+
+colnames(solidWaste)[1] = "Country Name"
+colnames(solidWaste)[2] = "Solid Waste"
+SolidWaste <- solidWaste$`Solid Waste`
+SolidWaste
+# solidWaste <- solidWaste[rep(seq_len(nrow(solidWaste)), each = 30), ]
+# 
+# Year <- c(seq(from = 1990, to = 2019, length.out = 30))
+# Year2 <- c(rep(Year, times = 38))
+# solidWaste <- solidWaste %>% mutate(Year = Year2)
+# 
+# gdpFull5 <- merge(gdpFull4, solidWaste, by=c("Country Name", "Year"))
+```
+
+```{r}
+Country <- c(unique(gdpFull4$`Country Name`))
+AverageGDP <- c()
+AverageGHG <- c()
+AverageWater <- c()
+AverageStrain <- c()
+AverageFuel <- c()
+amtYears <- 30
+for (i in 1:length(Country)) {
+  AverageGDP[i] <- (sum(gdpFull4[which(gdpFull4$`Country Name`==Country[i]), 3]))/amtYears
+}
+
+for (i in 1:length(Country)) {
+  AverageGHG[i] <- (sum(gdpFull4[which(gdpFull4$`Country Name`==Country[i]), 4]))/amtYears
+}
+
+for (i in 1:length(Country)) {
+  AverageWater[i] <- (sum(gdpFull4[which(gdpFull4$`Country Name`==Country[i]), 5]))/amtYears
+}
+
+for (i in 1:length(Country)) {
+  AverageFuel[i] <- (sum(gdpFull4[which(gdpFull4$`Country Name`==Country[i]), 6]))/amtYears
+}
+
+for (i in 1:length(Country)) {
+  AverageStrain[i] <- (sum(gdpFull4[which(gdpFull4$`Country Name`==Country[i]), 7]))/amtYears
+}
+
+finalDF <- data.frame(Country, (AverageGDP/1000000000), (AverageGHG/1000), AverageWater, AverageFuel, AverageStrain, SolidWaste)
+```
+
+```{r}
+epiDF <- data.frame(list[[1]])
+
+
+epiDF$Country[43] = "United States"
+epiDF$Country[178] = "Vietnam"
+
+finalDF <- merge(finalDF, epiDF, by=c("Country"))
+finalDF <- finalDF %>% dplyr::select(-Rank)
+colnames(finalDF)[2] = "Average.GDP"
+colnames(finalDF)[3] = "Average.GHG"
+colnames(finalDF)[4] = "Average.Water"
+colnames(finalDF)[5] = "Average.Fuel"
+colnames(finalDF)[6] = "Average.Strain"
+colnames(finalDF)[7] = "Solid.Waste"
+
+median(finalDF$EPI.Score)
+```
+
+```{r}
+epiMod <- lm(sqrt(EPI.Score) ~ Average.GDP + Average.GHG + Average.Water + Average.Fuel + Average.Strain + Solid.Waste, data = finalDF)
+
+epiModOrig <- lm(EPI.Score ~ Average.GDP + Average.GHG + Average.Water + Average.Fuel + Average.Strain + Solid.Waste, data = finalDF)
+
+summary(epiModOrig)
+summary(epiMod)
+plot(epiMod)
+
+boxcox(epiMod)
+
+epiModSimple <- lm(sqrt(EPI.Score) ~ Average.GDP, data = finalDF)
+epiModSimpleOrig <- lm(EPI.Score ~ Average.GDP, data = finalDF)
+
+summary(epiModSimpleOrig)
+summary(epiModSimple)
+
+anova(epiModSimple, epiMod)
+format(epiModSimple$coefficients, scientific = FALSE)
+format(epiMod$coefficients, scientific = FALSE)
+```
+
+```{r}
+pred <- predict(epiMod)
+predSimple <- predict(epiModSimple)
+pred^2
+
+ggplot(finalDF, aes(x = pred, y = EPI.Score)) + geom_smooth(method = "lm") + geom_point(color = "red") + xlab(bquote(sqrt("EPI Prediction"))) + ylab("Actual EPI Score") + theme_minimal()
+
+ggplot(finalDF, aes(x = predSimple, y = EPI.Score)) + geom_smooth(method = "lm") + geom_point(color = "red") + xlab(bquote(sqrt("EPI Prediction"))) + ylab("Actual EPI Score") + theme_minimal()
+
+plot1 <- ggplot(finalDF, aes(x = fct_rev(fct_reorder(Country, EPI.Score)), y = EPI.Score)) + geom_col(fill = "darkgreen") + theme_minimal() + theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust = 1, size = 9)) + ylab("EPI Score") + xlab("Country")
+plot2 <- ggplot(finalDF, aes(x = fct_rev(fct_reorder(Country, Average.GDP)), y = Average.GDP)) + geom_col(fill = "firebrick") + theme_minimal() + theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust = 1, size = 9)) + ylab("GDP (US$ in billions)") + xlab("Country")
+plot3 <- ggplot(finalDF, aes(x = fct_rev(fct_reorder(Country, Average.GHG)), y = Average.GHG)) + geom_col(fill = "blue") + theme_minimal() + theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust = 1, size = 8)) + ylab("Greenhouse Gases (MT)") + xlab("Country")
+plot4 <- ggplot(finalDF, aes(x = fct_rev(fct_reorder(Country, Average.Water)), y = Average.Water)) + geom_col(fill = "purple4") + theme_minimal() + theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust = 1, size = 8)) + ylab(bquote("Water Usage "(Gm^3))) + xlab("Country")
+plot5 <- ggplot(finalDF, aes(x = fct_rev(fct_reorder(Country, Average.Fuel)), y = Average.Fuel)) + geom_col(fill = "orange") + theme_minimal() + theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust = 1, size = 8)) + ylab("Fossil Fuel Usage (TWh)") + xlab("Country")
+plot6 <- ggplot(finalDF, aes(x = fct_rev(fct_reorder(Country, Average.Strain)), y = Average.Strain)) + geom_col(fill = "gold2") + theme_minimal() + theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust = 1, size = 8)) + ylab("Water Strain") + xlab("Country")
+plot1
+plot2
+plot3
+plot4
+plot5
+plot6
+```
+
+```{r}
+kableDF <- finalDF
+
+colnames(kableDF)[2] = "Average GDP"
+colnames(kableDF)[3] = "Average GHG"
+colnames(kableDF)[4] = "Average Water"
+colnames(kableDF)[5] = "Average Fuel"
+colnames(kableDF)[6] = "Average Strain"
+colnames(kableDF)[7] = "Solid Waste"
+colnames(kableDF)[8] = "EPI Score"
+kableDF <- kableDF %>% dplyr::select(-X10.Year.Change)
+kableDF$`Solid Waste` <- as.numeric(kableDF$`Solid Waste`)
+
+kableDF <- kableDF %>% dplyr::mutate(across(where(is.numeric), ~ round(., 3)))
+
+kbl(kableDF) %>% kable_classic(full_width = F, html_font = "Times New Roman") %>% as_image(width = 8, file = "/Users/jacobfeinas/Desktop/Spring 2023/comap/kableoutput.png", zoom = 3)
+```
+```{r}
+epiUrl <- read_html("https://epi.yale.edu/epi-results/2022/country/ind")
+epi <- epiUrl %>% html_nodes("table")
+india <- epi %>% html_table
+
+indiaDF <- data.frame(india[[1]])
+indiaDF <- indiaDF %>% dplyr::slice(1,2,3,25,28,32,33,46,47)
+indiaDF$Component[1] <- "Overall EPI"
+
+indiaGraph <- ggplot(indiaDF, aes(x = fct_rev(fct_reorder(Component, EPI.Score)), y = EPI.Score)) + geom_col(fill = "orange") + theme_minimal() + theme(axis.text.x = element_text(angle = 50, vjust = 1, hjust = 1, size = 8)) + ylab("Component EPI Score (scale 0-100)") + xlab("Component") + ylim (0,100)
+indiaGraph
+```
+ 
+ 

@@ -1,0 +1,409 @@
+---
+title: "Final Project 543"
+author: "Jacob Feinas, Sean Floersch"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Libraries
+
+```{r, message = FALSE, echo = FALSE, warning = FALSE}
+source("~/Desktop/rstudioFiles/libraries.R")
+```
+
+## Read in Data
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = read.csv("poverty.csv")
+```
+
+## Data Exploration
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+# only consider head of household
+povertyData = povertyData %>% filter(parentesco1==1)
+
+# create column: do they pay rent?
+povertyData = povertyData %>% mutate(rentYN = ifelse(is.na(v2a1) == TRUE,0,1))
+```
+
+## Education
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+# Create new columns with level = 1,2,3,...
+povertyData = povertyData %>% mutate(education1 = ifelse(povertyData$instlevel1 == 1,1,0))
+povertyData = povertyData %>% mutate(education2 = ifelse(povertyData$instlevel2 == 1,2,0))
+povertyData = povertyData %>% mutate(education3 = ifelse(povertyData$instlevel3 == 1,3,0))
+povertyData = povertyData %>% mutate(education4 = ifelse(povertyData$instlevel4 == 1,4,0))
+povertyData = povertyData %>% mutate(education5 = ifelse(povertyData$instlevel5 == 1,5,0))
+povertyData = povertyData %>% mutate(education6 = ifelse(povertyData$instlevel6 == 1,6,0))
+povertyData = povertyData %>% mutate(education7 = ifelse(povertyData$instlevel7 == 1,7,0))
+povertyData = povertyData %>% mutate(education8 = ifelse(povertyData$instlevel8 == 1,8,0))
+povertyData = povertyData %>% mutate(education9 = ifelse(povertyData$instlevel9 == 1,9,0))
+
+# add up all columns, since only one column will be filled in with the respective level
+povertyData = povertyData %>% mutate(education = education1 + education2 + education3 + education4 + education5 + education6 + education7 + education8 + education9)
+
+# delete extraneous columns
+povertyData = povertyData %>% dplyr::select(-education1, -education2, -education3, -education4, -education5, -education6, -education7, -education8, -education9)
+
+povertyData = povertyData %>% dplyr::select(-instlevel1, -instlevel2, -instlevel3, -instlevel4, -instlevel5, -instlevel6, -instlevel7, -instlevel8, -instlevel9)
+
+```
+
+## Walls
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = povertyData %>% mutate(ewalls1 = ifelse(povertyData$paredblolad == 1,1,0))
+povertyData = povertyData %>% mutate(ewalls2 = ifelse(povertyData$paredzocalo == 1,2,0))
+povertyData = povertyData %>% mutate(ewalls3 = ifelse(povertyData$paredpreb == 1,3,0))
+povertyData = povertyData %>% mutate(ewalls4 = ifelse(povertyData$pareddes == 1,4,0))
+povertyData = povertyData %>% mutate(ewalls5 = ifelse(povertyData$paredmad == 1,5,0))
+povertyData = povertyData %>% mutate(ewalls6 = ifelse(povertyData$paredzinc == 1,6,0))
+povertyData = povertyData %>% mutate(ewalls7 = ifelse(povertyData$paredfibras == 1,7,0))
+povertyData = povertyData %>% mutate(ewalls8 = ifelse(povertyData$paredother == 1,8,0))
+
+povertyData = povertyData %>% mutate(wallType = ewalls1 + ewalls2 + ewalls3 + ewalls4 + ewalls5 + ewalls6 + ewalls7 + ewalls8)
+
+povertyData = povertyData %>% dplyr::select(-ewalls1, -ewalls2, -ewalls3, -ewalls4, -ewalls5, -ewalls6, -ewalls7, -ewalls8)
+
+povertyData = povertyData %>% dplyr::select(-paredblolad, -paredzocalo, -paredpreb, -pareddes, -paredmad, -paredzinc, -paredfibras, -paredother)
+```
+
+## Walls Condition
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = povertyData %>% mutate(walls1 = ifelse(povertyData$epared1 == 1,1,0))
+povertyData = povertyData %>% mutate(walls2 = ifelse(povertyData$epared2 == 1,2,0))
+povertyData = povertyData %>% mutate(walls3 = ifelse(povertyData$epared3 == 1,3,0))
+
+povertyData = povertyData %>% mutate(wallCond = walls1 + walls2 + walls3)
+
+povertyData = povertyData %>% dplyr::select(-walls1, -walls2, -walls3)
+
+povertyData = povertyData %>% dplyr::select(-epared1, -epared2, -epared3)
+```
+
+## Floor
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = povertyData %>% mutate(floor1 = ifelse(povertyData$pisomoscer == 1,1,0))
+povertyData = povertyData %>% mutate(floor2 = ifelse(povertyData$pisocemento == 1,2,0))
+povertyData = povertyData %>% mutate(floor3 = ifelse(povertyData$pisoother == 1,3,0))
+povertyData = povertyData %>% mutate(floor4 = ifelse(povertyData$pisonatur == 1,4,0))
+povertyData = povertyData %>% mutate(floor5 = ifelse(povertyData$pisonotiene == 1,5,0))
+povertyData = povertyData %>% mutate(floor6 = ifelse(povertyData$pisomadera == 1,6,0))
+
+povertyData = povertyData %>% mutate(floorType = floor1 + floor2 + floor3 + floor4 + floor5 + floor6)
+
+povertyData = povertyData %>% dplyr::select(-floor1, -floor2, -floor3, -floor4, -floor5, -floor6)
+
+povertyData = povertyData %>% dplyr::select(-pisomoscer, -pisocemento, -pisoother, -pisonatur, -pisonotiene, -pisomadera)
+```
+
+## Floor Condition
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = povertyData %>% mutate(floorC1 = ifelse(povertyData$eviv1 == 1,1,0))
+povertyData = povertyData %>% mutate(floorC2 = ifelse(povertyData$eviv2 == 1,2,0))
+povertyData = povertyData %>% mutate(floorC3 = ifelse(povertyData$eviv3 == 1,3,0))
+
+povertyData = povertyData %>% mutate(floorCond = floorC1 + floorC2 + floorC3)
+
+povertyData = povertyData %>% dplyr::select(-floorC1, -floorC2, -floorC3)
+
+povertyData = povertyData %>% dplyr::select(-eviv1, -eviv2, -eviv3)
+```
+
+## Roof
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = povertyData %>% mutate(roof1 = ifelse(povertyData$techozinc == 1,1,0))
+povertyData = povertyData %>% mutate(roof2 = ifelse(povertyData$techoentrepiso == 1,2,0))
+povertyData = povertyData %>% mutate(roof3 = ifelse(povertyData$techocane == 1,3,0))
+povertyData = povertyData %>% mutate(roof4 = ifelse(povertyData$techootro == 1,4,0))
+
+povertyData = povertyData %>% mutate(roofType = roof1 + roof2 + roof3 + roof4)
+
+povertyData = povertyData %>% dplyr::select(-roof1, -roof2, -roof3, -roof4)
+
+povertyData = povertyData %>% dplyr::select(-techozinc, -techoentrepiso, -techocane, -techootro)
+```
+
+## Roof Condition
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = povertyData %>% mutate(roofC1 = ifelse(povertyData$etecho1 == 1,1,0))
+povertyData = povertyData %>% mutate(roofC2 = ifelse(povertyData$etecho2 == 1,2,0))
+povertyData = povertyData %>% mutate(roofC3 = ifelse(povertyData$etecho3 == 1,3,0))
+
+povertyData = povertyData %>% mutate(roofCond = roofC1 + roofC2 + roofC3)
+
+povertyData = povertyData %>% dplyr::select(-roofC1, -roofC2, -roofC3)
+
+povertyData = povertyData %>% dplyr::select(-etecho1, -etecho2, -etecho3)
+```
+
+## Waste
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = povertyData %>% mutate(waste1 = ifelse(povertyData$elimbasu1 == 1,1,0))
+povertyData = povertyData %>% mutate(waste2 = ifelse(povertyData$elimbasu2 == 1,2,0))
+povertyData = povertyData %>% mutate(waste3 = ifelse(povertyData$elimbasu3 == 1,3,0))
+povertyData = povertyData %>% mutate(waste4 = ifelse(povertyData$elimbasu4 == 1,4,0))
+povertyData = povertyData %>% mutate(waste5 = ifelse(povertyData$elimbasu5 == 1,5,0))
+povertyData = povertyData %>% mutate(waste6 = ifelse(povertyData$elimbasu6 == 1,6,0))
+
+povertyData = povertyData %>% mutate(wasteType = waste1 + waste2 + waste3 + waste4 + waste5 + waste6)
+
+povertyData = povertyData %>% dplyr::select(-waste1, -waste2, -waste3, -waste4, -waste5, -waste6)
+
+povertyData = povertyData %>% dplyr::select(-elimbasu1, -elimbasu2, -elimbasu3, -elimbasu4, -elimbasu5, -elimbasu6)
+```
+
+## Ownership
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+povertyData = povertyData %>% mutate(own1 = ifelse(povertyData$tipovivi1 == 1,1,0))
+povertyData = povertyData %>% mutate(own2 = ifelse(povertyData$tipovivi2 == 1,2,0))
+povertyData = povertyData %>% mutate(own3 = ifelse(povertyData$tipovivi3 == 1,3,0))
+povertyData = povertyData %>% mutate(own4 = ifelse(povertyData$tipovivi4 == 1,4,0))
+povertyData = povertyData %>% mutate(own5 = ifelse(povertyData$tipovivi5 == 1,5,0))
+
+povertyData = povertyData %>% mutate(ownType = own1 + own2 + own3 + own4 + own5)
+
+povertyData = povertyData %>% dplyr::select(-own1, -own2, -own3, -own4, -own5)
+
+povertyData = povertyData %>% dplyr::select(-tipovivi1, -tipovivi2, -tipovivi3, -tipovivi4, -tipovivi5)
+```
+
+## Create new Data Frame
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+# data frame with relevant variables
+povertyData2 = povertyData %>% dplyr::select(v2a1, hacdor, rooms, hacapo, v14a, refrig, v18q, hhsize, cielorazo, abastaguano, noelec, sanitario1, energcocinar1, hogar_total, hogar_mayor, hogar_adul, hogar_nin, overcrowding, computer, television, qmobilephone, rentYN, education, wallType, wallCond, floorType, floorCond, roofType, roofCond, wasteType, ownType, Target)
+
+povertyData2$Target <- as.factor(povertyData2$Target)
+
+povModFull2 <- multinom(Target~., data = povertyData2)
+
+povertyData2 <- povertyData2 %>% 
+  mutate(v2a1=ifelse(is.na(v2a1) == TRUE,0, v2a1))
+
+povModFull <- multinom(Target~., data = povertyData2)
+
+# set seed for replicability
+set.seed(908)
+
+# create train and test data
+trainPov <- sample(1:nrow(povertyData2), floor(.75*nrow(povertyData2)), replace=F)
+povTrain <- povertyData2[trainPov,]
+povTest <- povertyData2[-trainPov,]
+
+# full model
+povMod <- multinom(Target~., data = povTrain)
+
+# null model (used income since Target~1 threw an error)
+povNull <- multinom(Target~1, data = povTrain)
+
+# test to see if full model is better than null model
+anova(povNull, povMod)
+ 
+povForwardMod = step(povNull, scope=list(lower=povNull, upper=povMod), direction = "forward", trace = 0)
+
+povBackwardMod = step(povMod, direction = "backward", trace = 0)
+```
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+# lasso regression and set seed
+set.seed(908)
+xtrain <- model.matrix(Target~., povTrain)
+ytrain <- povTrain$Target
+
+povModLasso <- cv.glmnet(xtrain, ytrain, family="multinomial", alpha=1, type.measure="default")
+coef(povModLasso, s=povModLasso$lambda.1se)
+```
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+# pred <- data.frame(predict(povModLasso, newx = as.matrix(povTest)))
+# data <- data.frame(povTest$Target)
+# data <- data.frame(pred$predict.povBackwardMod..newdata...povTest., povTest$Target)
+# colnames(data) <- c("pred", "target")
+# 
+# x<-c()
+# x[1]<-length(which(data$pred==1& data$target==1)) /length(which(data$target==1))
+# x[2]<-length(which(data$pred==2& data$target==2)) /length(which(data$target==2))
+# x[3]<-length(which(data$pred==3& data$target==3)) /length(which(data$target==3))
+# x[4]<-length(which(data$pred==4& data$target==4)) /length(which(data$target==4))
+# mean(x)
+# length(which(data$pred==data$target))/ length(data$pred)
+# length(which(data$target==4))
+# 471/740
+```
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+pred <- data.frame(predict(povBackwardMod, newdata = povTest))
+data <- data.frame(povTest$Target)
+data <- data.frame(pred$predict.povBackwardMod..newdata...povTest., povTest$Target)
+colnames(data) <- c("pred", "target")
+
+x<-c()
+x[1]<-length(which(data$pred==1& data$target==1)) /length(which(data$target==1))
+x[2]<-length(which(data$pred==2& data$target==2)) /length(which(data$target==2))
+x[3]<-length(which(data$pred==3& data$target==3)) /length(which(data$target==3))
+x[4]<-length(which(data$pred==4& data$target==4)) /length(which(data$target==4))
+mean(x)
+length(which(data$pred==data$target))/ length(data$pred)
+length(which(data$target==4))
+471/740
+```
+
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+pred <- data.frame(predict(povForwardMod, newdata = povTest))
+data <- data.frame(povTest$Target)
+data <- data.frame(pred$predict.povForwardMod..newdata...povTest., povTest$Target)
+colnames(data) <- c("pred", "target")
+
+x<-c()
+x[1]<-length(which(data$pred==1& data$target==1)) /length(which(data$target==1))
+x[2]<-length(which(data$pred==2& data$target==2)) /length(which(data$target==2))
+x[3]<-length(which(data$pred==3& data$target==3)) /length(which(data$target==3))
+x[4]<-length(which(data$pred==4& data$target==4)) /length(which(data$target==4))
+mean(x)
+length(which(data$pred==data$target))/ length(data$pred)
+length(which(data$target==4))
+
+```
+
+
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+pred <- data.frame(predict(povModFull2, newdata = povTest))
+data <- data.frame(povTest$Target)
+data <- data.frame(pred$predict., povTest$Target)
+colnames(data) <- c("pred", "target")
+
+x<-c()
+x[1]<-length(which(data$pred==1& data$target==1)) /length(which(data$target==1))
+x[2]<-length(which(data$pred==2& data$target==2)) /length(which(data$target==2))
+x[3]<-length(which(data$pred==3& data$target==3)) /length(which(data$target==3))
+x[4]<-length(which(data$pred==4& data$target==4)) /length(which(data$target==4))
+mean(x)
+length(which(data$pred==data$target))/ length(data$pred)
+length(which(data$target==4))
+```
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+str(povBackwardMod)
+povBackwardMod$terms
+```
+
+## Model Selction
+
+When deciding on the model to use, we considered multiple selection techniques. The techniques we tried were backward and forward selection, lasso regression, ridge regression, and a fully saturated model. The first step we took was running an ANOVA Chi-Square test comparing the null model (setting the explanatory variable to one) to the full model and concluded that with a p-value of < 0.001, a more complex model was needed. With this in mind, the other model selection techniques were executed and compared and the backward selection method produced the best model, with a correct classification rate of 0.6851. This is only around a 5% increase, so it is not a very reliable model. This model was compared to the classification rate of a fully saturated model (from the condensing of the original data set) and the backward selection was preferred.
+
+```{r, echo = FALSE, message = FALSE}
+povMatDataClass = c("", "Classification Rate", "Backwards Selection", 0.6851, "Forward Selection", 0.6823, "Saturated Model", 0.6681, "Baseline", 0.6364)
+
+povModMatrixClass = matrix(povMatDataClass, nrow=5, ncol=2, byrow=TRUE)
+povModMatrixClass
+```
+
+## Variables
+
+The following variables were chosen through the backwards step-wise selection. Education, floorType, roofType, and roofCond were created artificially through combinations of related variables.
+
+```{r, echo = FALSE, message = FALSE}
+povMatData = c("v2a1", "v18q", "hhsize", "cielorazo", "hogar_total", "hogar_mayor", "hogar_adul", "hogar_nin", "television", "qmobilephone", "education", "floorType", "roofType", "roofCond", "monthly rent payment", "owns a tablet", "household size", "1 if the house has a ceiling", "# of total individuals in the household", "# of individuals 65+ in the household" ,"number of adults in household", "number of children 0 to 19 in household", "1 if the household has TV", "# of mobile phones", "level of education", "type of floor", "type of roof", "roof condition")
+
+povModMatrix = matrix(povMatData, nrow=2, ncol=14, byrow=TRUE)
+povModMatrix
+```
+
+Many of the variables we suspected ended up in the final model, such as education, house condition, overcrowding (household size), and technology access.
+
+## Results, Limitations, and Possible Improvements
+
+All in all, the creation of our model did not drastically improve the classification rate for our predictions of economic security. This is not very surprising considering the vast number of fours for the Target variable which can skew the weight of the predictions. There were quite a few concerns regarding the limitations of our process. The first is the subjectivity of classifying vulnerability. Not only can it be difficult to make a judgement on whether or not a household is at risk of vulnerability, but there could be external factors that were taken into account when addressing this. Were there other signs that pointed to vulnerability that those in charge of data collection considered and deemed were enough of a factor to place a household in a different target category? Who were the people that were collecting the data? What is the criteria for considering the condition of a house? All these questions have a level subjectivity to them that are difficult to keep constant across observation, and for an individual assessing a household, sustaining the same level of subjectivity from house to house would be rather difficult as well. In addition to this, another big factor in our model was technology. Access to technology can represent affluence and monetary resilience. However, technology is becoming more and more accessible on a global scale. The presence of phones, televisions, and tablets is seen as less of an exclusive commodity and more so as a necessity in an increasingly connected world. 
+
+While our model did not predict as accurately as we had hoped coming into this, there were some important takeaways and ideas. The first is the idea for more comprehensive data collection. Is there information that can be collected about type of job, medical needs/dependence on external care, or condition of external aspects of the property? These types of questions can very easily cause a snapshot judgement or bias when assessing vulnerability. Additionally, we believe the use of this type of model can be an additional tool to assess vulnerability, but not one that can do so by itself. There can be a type of score that our model gives that can then be considered when taking into account the rest of the features that can't or are not documented.
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+blindData <- read.csv("poverty-test-blinded.csv")
+
+blindData = blindData %>% mutate(floor1 = ifelse(blindData$pisomoscer == 1,1,0))
+blindData = blindData %>% mutate(floor2 = ifelse(blindData$pisocemento == 1,2,0))
+blindData = blindData %>% mutate(floor3 = ifelse(blindData$pisoother == 1,3,0))
+blindData = blindData %>% mutate(floor4 = ifelse(blindData$pisonatur == 1,4,0))
+blindData = blindData %>% mutate(floor5 = ifelse(blindData$pisonotiene == 1,5,0))
+blindData = blindData %>% mutate(floor6 = ifelse(blindData$pisomadera == 1,6,0))
+
+blindData = blindData %>% mutate(floorType = floor1 + floor2 + floor3 + floor4 + floor5 + floor6)
+
+blindData = blindData %>% dplyr::select(-floor1, -floor2, -floor3, -floor4, -floor5, -floor6)
+
+blindData = blindData %>% dplyr::select(-pisomoscer, -pisocemento, -pisoother, -pisonatur, -pisonotiene, -pisomadera)
+```
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+# Create new columns with level = 1,2,3,...
+blindData = blindData %>% mutate(education1 = ifelse(blindData$instlevel1 == 1,1,0))
+blindData = blindData %>% mutate(education2 = ifelse(blindData$instlevel2 == 1,2,0))
+blindData = blindData %>% mutate(education3 = ifelse(blindData$instlevel3 == 1,3,0))
+blindData = blindData %>% mutate(education4 = ifelse(blindData$instlevel4 == 1,4,0))
+blindData = blindData %>% mutate(education5 = ifelse(blindData$instlevel5 == 1,5,0))
+blindData = blindData %>% mutate(education6 = ifelse(blindData$instlevel6 == 1,6,0))
+blindData = blindData %>% mutate(education7 = ifelse(blindData$instlevel7 == 1,7,0))
+blindData = blindData %>% mutate(education8 = ifelse(blindData$instlevel8 == 1,8,0))
+blindData = blindData %>% mutate(education9 = ifelse(blindData$instlevel9 == 1,9,0))
+
+blindData = blindData %>% mutate(education = education1 + education2 + education3 + education4 + education5 + education6 + education7 + education8 + education9)
+
+blindData = blindData %>% dplyr::select(-education1, -education2, -education3, -education4, -education5, -education6, -education7, -education8, -education9)
+
+blindData = blindData %>% dplyr::select(-instlevel1, -instlevel2, -instlevel3, -instlevel4, -instlevel5, -instlevel6, -instlevel7, -instlevel8, -instlevel9)
+```
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+blindData = blindData %>% mutate(roof1 = ifelse(blindData$techozinc == 1,1,0))
+blindData = blindData %>% mutate(roof2 = ifelse(blindData$techoentrepiso == 1,2,0))
+blindData = blindData %>% mutate(roof3 = ifelse(blindData$techocane == 1,3,0))
+blindData = blindData %>% mutate(roof4 = ifelse(blindData$techootro == 1,4,0))
+
+blindData = blindData %>% mutate(roofType = roof1 + roof2 + roof3 + roof4)
+
+blindData = blindData %>% dplyr::select(-roof1, -roof2, -roof3, -roof4)
+
+blindData = blindData %>% dplyr::select(-techozinc, -techoentrepiso, -techocane, -techootro)
+```
+
+```{r, warning = FALSE, echo = FALSE, message = FALSE, include = FALSE}
+blindData = blindData %>% mutate(roofC1 = ifelse(blindData$etecho1 == 1,1,0))
+blindData = blindData %>% mutate(roofC2 = ifelse(blindData$etecho2 == 1,2,0))
+blindData = blindData %>% mutate(roofC3 = ifelse(blindData$etecho3 == 1,3,0))
+
+blindData = blindData %>% mutate(roofCond = roofC1 + roofC2 + roofC3)
+
+blindData = blindData %>% dplyr::select(-roofC1, -roofC2, -roofC3)
+
+blindData = blindData %>% dplyr::select(-etecho1, -etecho2, -etecho3)
+```
+
+```{r}
+blindData2 = blindData %>% dplyr::select(v2a1, hacdor, rooms, hacapo, v14a, refrig, v18q, hhsize, cielorazo, abastaguano, noelec, sanitario1, energcocinar1, hogar_total, hogar_mayor, hogar_adul, hogar_nin, overcrowding, computer, television, qmobilephone, education, floorType, roofType, roofCond, Target)
+
+blindData2$Target <- as.factor(blindData2$Target)
+```
+
+```{r, echo = FALSE, message = FALSE}
+#Blinded Accuracy Test
+predsBlind = predict.glm(povBackwardMod, newdata = blindData2, type="response")
+predsBlindResp = predsBlind > 0.3
+
+blindData = blindData %>% dplyr::mutate(Target = predsBlindResp)
+
+blindData2 = data.frame(blindData)
+
+write_csv(blindData2, "blindData.csv")
+```
